@@ -66,6 +66,24 @@ async def toggle_favorite(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=kb)
     await callback.answer()
 
+@router.callback_query(OnboardingStates.favorites, F.data.startswith("fav:del:"))
+async def delete_custom_favorite(callback: CallbackQuery, state: FSMContext):
+    val = callback.data.split(":", 2)[2]
+    data = await state.get_data()
+    favs = set(data.get("favorites", []))
+    to_remove = {x for x in favs if x.lower().startswith(val.lower()) or x == val}
+    favs -= to_remove
+    await state.update_data(favorites=list(favs))
+    kb = get_multi_select_keyboard(POPULAR_FAVORITES, favs, "fav", "fav:next", allow_skip=False)
+    text = (
+        "👋 *Шаг 1 из 4: Любимые продукты*\n\n"
+        "Что вы и ваша семья обожаете есть? Мы сделаем акцент на этих блюдах и ингредиентах в меню.\n\n"
+        "Нажимайте на кнопки, чтобы выбрать, либо *напишите свои варианты сообщением* (через запятую).\n\n"
+        f"Выбрано: {format_selected_text(list(favs))}"
+    )
+    await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=kb)
+    await callback.answer(f"Удалено: {val}")
+
 @router.message(OnboardingStates.favorites, F.text)
 async def custom_favorites_text(message: Message, state: FSMContext):
     items = [x.strip() for x in message.text.split(",") if x.strip()]
@@ -121,6 +139,24 @@ async def toggle_stop_item(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=kb)
     await callback.answer()
 
+@router.callback_query(OnboardingStates.stop_list, F.data.startswith("stop:del:"))
+async def delete_custom_stop(callback: CallbackQuery, state: FSMContext):
+    val = callback.data.split(":", 2)[2]
+    data = await state.get_data()
+    stops = set(data.get("stop_list", []))
+    to_remove = {x for x in stops if x.lower().startswith(val.lower()) or x == val}
+    stops -= to_remove
+    await state.update_data(stop_list=list(stops))
+    kb = get_multi_select_keyboard(POPULAR_STOP_ITEMS, stops, "stop", "stop:next", allow_skip=True)
+    text = (
+        "🚫 *Шаг 2 из 4: Стоп-лист (нелюбимые продукты)*\n\n"
+        "Какие продукты вы *категорически не едите*? Мы гарантируем, что ни одно блюдо с ними не попадет в ваше меню.\n\n"
+        "Выберите из списка или напишите текстом (например: _кинза, свинина, оливки_).\n\n"
+        f"В стоп-листе: {format_selected_text(list(stops))}"
+    )
+    await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=kb)
+    await callback.answer(f"Удалено: {val}")
+
 @router.message(OnboardingStates.stop_list, F.text)
 async def custom_stop_text(message: Message, state: FSMContext):
     items = [x.strip() for x in message.text.split(",") if x.strip()]
@@ -174,6 +210,24 @@ async def toggle_allergy(callback: CallbackQuery, state: FSMContext):
     )
     await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=kb)
     await callback.answer()
+
+@router.callback_query(OnboardingStates.allergies, F.data.startswith("allg:del:"))
+async def delete_custom_allergy(callback: CallbackQuery, state: FSMContext):
+    val = callback.data.split(":", 2)[2]
+    data = await state.get_data()
+    allgs = set(data.get("allergies", []))
+    to_remove = {x for x in allgs if x.lower().startswith(val.lower()) or x == val}
+    allgs -= to_remove
+    await state.update_data(allergies=list(allgs))
+    kb = get_multi_select_keyboard(POPULAR_ALLERGIES, allgs, "allg", "allg:next", allow_skip=True)
+    text = (
+        "⚠️ *Шаг 3 из 4: Аллергии и ограничения*\n\n"
+        "Есть ли у кого-то из членов семьи медицинские или строгие пищевые ограничения? (глютен, лактоза, орехи и др.)\n\n"
+        "Выберите из кнопок или введите свои вручную.\n\n"
+        f"Выбрано: {format_selected_text(list(allgs))}"
+    )
+    await callback.message.edit_text(text, parse_mode="Markdown", reply_markup=kb)
+    await callback.answer(f"Удалено: {val}")
 
 @router.message(OnboardingStates.allergies, F.text)
 async def custom_allergies_text(message: Message, state: FSMContext):

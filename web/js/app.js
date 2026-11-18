@@ -1,6 +1,6 @@
 /**
  * Liquid Glass Telegram Mini App Controller
- * Family Menu Planner & Supermarket Price Comparator (Пятерочка, Магнит, Лента)
+ * Family Menu Planner & Real-Time Supermarket Price Comparator (Пятерочка, Магнит, Лента)
  * Physics and shaders based on liquid-glass-kit by Volodymyr (@vovnx)
  */
 
@@ -36,6 +36,8 @@
   // State
   let currentMenuData = null;
   let currentProfileData = null;
+  let presetCatalog = {};
+  let activeCategory = "Мясо и птица";
   let activeDayIndex = 0;
   let activeViewIndex = 0;
 
@@ -70,8 +72,7 @@
     for (let i = 0; i < a.length; i += 4) { a[i] = a[i + 1] = 128; a[i + 3] = 255; }
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
-        const X = x < r ? x - r : x >= w - r ? x - r - wB : 0;
-        const Y = y < r ? y - r : y >= h - r ? y - r - hB : 0;
+        const X = x < r ? x - r : x >= w - r ? x - r - wB : 0, Y = y < r ? y - r : y >= h - r ? y - r - hB : 0;
         const d2 = X * X + Y * Y;
         if (d2 > (r + 1) ** 2) continue;
         const d = Math.sqrt(d2);
@@ -200,13 +201,12 @@
     hap.impact('medium');
   }));
 
-  tabs.forEach((el, n) => el.addEventListener('click', e => {
+  tabs.forEach((el, n) => el.addEventListener('click', () => {
     target = n;
     setActive(n);
     hap.select();
   }));
 
-  // Button physics step registry
   const btnSteps = [];
 
   let last = performance.now();
@@ -368,7 +368,7 @@
     if (!pop) return;
     pop.textContent = text;
     pop.classList.remove('show');
-    void pop.offsetWidth; // re-flow
+    void pop.offsetWidth;
     pop.classList.add('show');
     hap.impact('medium');
   }
@@ -381,7 +381,6 @@
 
     activeDayIndex = dayIndex;
 
-    // Day chips
     document.querySelectorAll('#dayScroll .dchip').forEach((chip, idx) => {
       chip.classList.toggle('active', idx === dayIndex);
     });
@@ -400,16 +399,13 @@
     $('dayFatsText').textContent = `${Math.round(totalF)}г`;
     $('dayCarbsText').textContent = `${Math.round(totalC)}г`;
 
-    // Render Meals
     const container = $('mealsContainer');
     container.innerHTML = '';
-
     const mealIcons = { breakfast: '🍳', lunch: '🍲', dinner: '🥗' };
 
     (day.dishes || []).forEach(dish => {
       const item = document.createElement('div');
       item.className = 'meal-item';
-
       const icon = mealIcons[dish.meal_type] || '🍽';
       const ingsHtml = (dish.ingredients || []).map(ing =>
         `<span class="ing-tag">${ing.name}: <strong>${ing.amount} ${ing.unit}</strong></span>`
@@ -428,7 +424,7 @@
     });
   }
 
-  // --- 6. RENDER PRICES SCREEN (VIEW 1) ---
+  // --- 6. RENDER PRICES SCREEN (VIEW 1) WITH REAL-TIME INDICATORS ---
   function renderPriceComparison(comp) {
     if (!comp || !comp.stores) return;
 
@@ -440,18 +436,12 @@
     if (mag) $('priceMag').textContent = `${Math.round(mag.total_price).toLocaleString('ru-RU')} ₽`;
     if (len) $('priceLen').textContent = `${Math.round(len.total_price).toLocaleString('ru-RU')} ₽`;
 
-    const boxes = {
-      pyaterochka: $('boxPyaterochka'),
-      magnit: $('boxMagnit'),
-      lenta: $('boxLenta')
-    };
+    if (comp.checked_at) {
+      $('priceCheckedAtLabel').textContent = `Обновлено: ${comp.checked_at}`;
+    }
 
-    const diffs = {
-      pyaterochka: $('diffPya'),
-      magnit: $('diffMag'),
-      lenta: $('diffLen')
-    };
-
+    const boxes = { pyaterochka: $('boxPyaterochka'), magnit: $('boxMagnit'), lenta: $('boxLenta') };
+    const diffs = { pyaterochka: $('diffPya'), magnit: $('diffMag'), lenta: $('diffLen') };
     const minTotal = Math.min(pya?.total_price || 0, mag?.total_price || 0, len?.total_price || 0);
 
     Object.keys(boxes).forEach(k => {
@@ -477,7 +467,6 @@
       $('hybridTipText').innerHTML = `💡 Покупая в <strong>${comp.cheapest_store}</strong>, вы экономите <strong>${Math.round(comp.max_savings)} ₽</strong>!`;
     }
 
-    // Item breakdown
     const list = $('priceItemsList');
     list.innerHTML = '';
     const items = comp.items || [];
@@ -493,9 +482,9 @@
       const minP = Math.min(pPya, pMag, pLen);
 
       row.innerHTML = `
-        <div>
+        <div style="flex:1;">
           <div class="p-name">${it.product_name}</div>
-          <div class="p-sub">${it.amount_needed} ${it.unit} • Лучшая цена: ${it.best_store}</div>
+          <div class="p-sub">${it.amount_needed} ${it.unit} • Выгоднее в: <strong>${it.best_store}</strong></div>
         </div>
         <div class="p-prices">
           <span class="p-badge ${pPya === minP ? 'best' : ''}">Пят ${pPya}₽</span>
@@ -507,7 +496,192 @@
     });
   }
 
-  // --- 7. DATA LOADING ---
+  // --- 7. RENDER PROFILE TAGS WITH 1-CLICK DELETE ---
+  function renderProfileTags() {
+    if (!currentProfileData) return;
+
+    // 1. Favorites
+    const favWrap = $('favTagsContainer');
+    favWrap.innerHTML = '';
+    const favs = currentProfileData.favorite_products || [];
+    $('favCountBadge').textContent = `${favs.length} шт.`;
+
+    if (!favs.length) {
+      favWrap.innerHTML = `<span style="font-size:13px; color:#8e8e93;">Список пуст. Добавьте свои любимые продукты выше!</span>`;
+    } else {
+      favs.forEach(item => {
+        const pill = document.createElement('span');
+        pill.className = 'tag-pill fav';
+        pill.innerHTML = `
+          <span>${item}</span>
+          <button type="button" class="tag-del-btn" title="Удалить">✕</button>
+        `;
+        pill.querySelector('.tag-del-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          deleteItem('favorites', item);
+        });
+        favWrap.appendChild(pill);
+      });
+    }
+
+    // 2. Stop-List
+    const stopWrap = $('stopTagsContainer');
+    stopWrap.innerHTML = '';
+    const stops = currentProfileData.stop_list || [];
+    $('stopCountBadge').textContent = `${stops.length} шт.`;
+
+    if (!stops.length) {
+      stopWrap.innerHTML = `<span style="font-size:13px; color:#8e8e93;">Стоп-лист пуст. Вы можете добавить продукты, которые не любите.</span>`;
+    } else {
+      stops.forEach(item => {
+        const pill = document.createElement('span');
+        pill.className = 'tag-pill stop';
+        pill.innerHTML = `
+          <span>🚫 ${item}</span>
+          <button type="button" class="tag-del-btn" title="Удалить">✕</button>
+        `;
+        pill.querySelector('.tag-del-btn').addEventListener('click', e => {
+          e.stopPropagation();
+          deleteItem('stop-list', item);
+        });
+        stopWrap.appendChild(pill);
+      });
+    }
+
+    // 3. Allergies
+    const allgWrap = $('allgTagsContainer');
+    allgWrap.innerHTML = '';
+    const allgs = currentProfileData.allergies || [];
+    allgs.forEach(item => {
+      const pill = document.createElement('span');
+      pill.className = 'tag-pill allg';
+      pill.innerHTML = `
+        <span>⚠️ ${item}</span>
+        <button type="button" class="tag-del-btn" title="Удалить">✕</button>
+      `;
+      pill.querySelector('.tag-del-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        deleteItem('allergies', item);
+      });
+      allgWrap.appendChild(pill);
+    });
+
+    // 4. Steppers & Plan Days
+    $('familySizeVal').textContent = currentProfileData.family_size || 2;
+    document.querySelectorAll('#periodChips .tg').forEach(el => {
+      el.classList.toggle('selected', parseInt(el.dataset.days) === currentProfileData.plan_days);
+    });
+  }
+
+  // 1-Click Delete item from list
+  async function deleteItem(type, item) {
+    try {
+      const res = await fetch(`/api/profile/${currentUserId}/${type}/${encodeURIComponent(item)}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error('Delete failed');
+      currentProfileData = await res.json();
+      renderProfileTags();
+      showToast(`Удалено: ${item}`);
+      // Refresh menu with new exclusions
+      loadData(false);
+    } catch (e) {
+      console.error(e);
+      showToast('Ошибка удаления');
+    }
+  }
+
+  // Add custom item manually
+  async function addCustomItem(type) {
+    const input = $('customProductInput');
+    const val = input.value.trim();
+    if (!val) {
+      showToast('Введите название продукта');
+      input.focus();
+      return;
+    }
+
+    try {
+      const endpoint = type === 'fav' ? 'favorites' : 'stop-list';
+      const res = await fetch(`/api/profile/${currentUserId}/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item: val })
+      });
+      if (!res.ok) throw new Error('Add failed');
+      currentProfileData = await res.json();
+      input.value = '';
+      renderProfileTags();
+      showToast(type === 'fav' ? `Добавлено в любимые: ${val}` : `Добавлено в стоп-лист: ${val}`);
+      // Update menu
+      loadData(false);
+    } catch (e) {
+      console.error(e);
+      showToast('Ошибка добавления');
+    }
+  }
+
+  // --- 8. PRESET CATALOG BY CATEGORIES ---
+  async function loadPresetCatalog() {
+    try {
+      const res = await fetch('/api/catalog/preset');
+      if (res.ok) {
+        presetCatalog = await res.json();
+        renderCategoryItems(activeCategory);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function renderCategoryItems(catName) {
+    activeCategory = catName;
+    const grid = $('catItemsGrid');
+    grid.innerHTML = '';
+    const items = presetCatalog[catName] || [];
+
+    document.querySelectorAll('#catStrip .cat-pill').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.cat === catName);
+    });
+
+    items.forEach(it => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cat-item-btn';
+      btn.innerHTML = `<span>${it.icon} ${it.name}</span>`;
+      btn.addEventListener('click', () => {
+        // Direct quick add to favorites or stop-list
+        const isAlreadyFav = (currentProfileData?.favorite_products || []).includes(it.name);
+        if (isAlreadyFav) {
+          showToast(`${it.name} уже в любимых!`);
+        } else {
+          $('customProductInput').value = it.name;
+          addCustomItem('fav');
+        }
+      });
+      grid.appendChild(btn);
+    });
+  }
+
+  // Category Strip clicks
+  document.querySelectorAll('#catStrip .cat-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      renderCategoryItems(btn.dataset.cat);
+      hap.select();
+    });
+  });
+
+  // Buttons for custom product adding
+  $('btnAddCustomFav')?.addEventListener('click', () => addCustomItem('fav'));
+  $('btnAddCustomStop')?.addEventListener('click', () => addCustomItem('stop'));
+  $('customProductInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addCustomItem('fav');
+    }
+  });
+
+  // --- 9. DATA LOADING ---
   async function loadData(refresh = false) {
     try {
       const res = await fetch(`/api/menu/${currentUserId}${refresh ? '?refresh=true' : ''}`);
@@ -518,7 +692,7 @@
       if (profRes.ok) {
         currentProfileData = await profRes.json();
         $('headerFamilySub').textContent = `Семья ${currentProfileData.family_size} чел. • ${currentProfileData.plan_days} дн.`;
-        syncProfileInputs(currentProfileData);
+        renderProfileTags();
       }
 
       renderDailyMenu(activeDayIndex);
@@ -527,34 +701,12 @@
       }
 
       if (refresh) {
-        showToast('Меню и цены обновлены!');
+        showToast('Цены и меню обновлены в реальном времени!');
       }
     } catch (err) {
       console.error(err);
       showToast('Ошибка загрузки данных');
     }
-  }
-
-  // --- 8. PROFILE PREFERENCES SYNC ---
-  function syncProfileInputs(profile) {
-    if (!profile) return;
-    $('familySizeVal').textContent = profile.family_size || 2;
-
-    document.querySelectorAll('#periodChips .tg').forEach(el => {
-      el.classList.toggle('selected', parseInt(el.dataset.days) === profile.plan_days);
-    });
-
-    document.querySelectorAll('#favTagsWrap .tg').forEach(el => {
-      el.classList.toggle('selected', (profile.favorite_products || []).includes(el.dataset.val));
-    });
-
-    document.querySelectorAll('#stopTagsWrap .tg').forEach(el => {
-      el.classList.toggle('selected', (profile.stop_list || []).includes(el.dataset.val));
-    });
-
-    document.querySelectorAll('#allgTagsWrap .tg').forEach(el => {
-      el.classList.toggle('selected', (profile.allergies || []).includes(el.dataset.val));
-    });
   }
 
   // Family size steppers
@@ -585,40 +737,18 @@
     });
   });
 
-  // Multi-select tags toggle
-  function setupTagClicks(wrapId) {
-    document.querySelectorAll(`#${wrapId} .tg`).forEach(el => {
-      el.addEventListener('click', () => {
-        el.classList.toggle('selected');
-        hap.select();
-      });
-    });
-  }
-  setupTagClicks('favTagsWrap');
-  setupTagClicks('stopTagsWrap');
-  setupTagClicks('allgTagsWrap');
-
-  // Save Profile
+  // Save Profile and recalculate
   $('btnSaveProfile')?.addEventListener('click', async () => {
     const familySize = parseInt($('familySizeVal').textContent) || 2;
     const planDays = parseInt(document.querySelector('#periodChips .tg.selected')?.dataset.days) || 7;
-
-    const favorites = [];
-    document.querySelectorAll('#favTagsWrap .tg.selected').forEach(c => favorites.push(c.dataset.val));
-
-    const stopList = [];
-    document.querySelectorAll('#stopTagsWrap .tg.selected').forEach(c => stopList.push(c.dataset.val));
-
-    const allergies = [];
-    document.querySelectorAll('#allgTagsWrap .tg.selected').forEach(c => allergies.push(c.dataset.val));
 
     const payload = {
       telegram_id: currentUserId,
       username: currentUserName,
       first_name: currentUserName,
-      favorite_products: favorites,
-      stop_list: stopList,
-      allergies: allergies,
+      favorite_products: currentProfileData?.favorite_products || [],
+      stop_list: currentProfileData?.stop_list || [],
+      allergies: currentProfileData?.allergies || [],
       family_size: familySize,
       plan_days: planDays
     };
@@ -631,7 +761,7 @@
       });
       if (!res.ok) throw new Error('Failed to save');
 
-      showToast('Анкета сохранена! Меню пересчитано');
+      showToast('Профиль сохранен! Меню пересчитано');
       await loadData(false);
       target = 0;
       setActive(0);
@@ -650,13 +780,18 @@
     });
   });
 
-  // Regenerate Button
+  // Regenerate & Refresh Buttons
   $('btnRegenerateMenu')?.addEventListener('click', () => {
     loadData(true);
     hap.impact('medium');
   });
 
-  // Quick Circle Action Button in Dock (uses glassBtn physical spring)
+  $('btnRefreshPricesLive')?.addEventListener('click', () => {
+    loadData(true);
+    hap.impact('medium');
+  });
+
+  // Quick Circle Action Button in Dock
   glassBtn($('circle'), $('slens'), () => {
     loadData(true);
   });
@@ -679,5 +814,6 @@
   $('btnTestHealthPing')?.addEventListener('click', testHealthPing);
 
   // Initial load
+  loadPresetCatalog();
   loadData(false);
 })();

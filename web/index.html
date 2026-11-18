@@ -84,14 +84,17 @@
   </section>
 
   <!-- ============================================== -->
-  <!-- VIEW 1: ЦЕНЫ (Сравнение супермаркетов)         -->
+  <!-- VIEW 1: ЦЕНЫ (Сравнение супермаркетов ОНЛАЙН)  -->
   <!-- ============================================== -->
   <section class="view" id="v1">
     <div class="sscroll">
       <div class="stop">
         <div>
           <h2>Сравнение цен</h2>
-          <div class="sub">Полная корзина на неделю</div>
+          <div class="sub" style="display:flex; align-items:center; gap:8px;">
+            <span class="live-pulse"><span class="pulse-dot"></span> Реальное время</span>
+            <span id="priceCheckedAtLabel" style="color:#8e8e93; font-size:12px;">Пятерочка • Магнит • Лента</span>
+          </div>
         </div>
         <div class="sav" style="background: linear-gradient(135deg, #ff9500, #ff3b30);">🛒</div>
       </div>
@@ -123,7 +126,7 @@
           <span class="schd-badge green">Умный сплит</span>
         </div>
         <div class="scb" id="hybridTipText" style="font-size: 14px; line-height: 1.45; color: #e5e5ea;">
-          💡 Покупая мясо и яйца в Магните, а рыбу и свежие овощи в Ленте, ваша корзина обойдется всего в <strong>3 980 ₽</strong> (экономия еще 270 ₽)!
+          💡 Покупая мясо и яйца в Магните, а рыбу и свежие овощи в Ленте, ваша корзина обойдется в <strong>3 980 ₽</strong> (экономия еще 270 ₽)!
         </div>
       </div>
 
@@ -137,30 +140,127 @@
           <!-- Populated by JS -->
         </div>
       </div>
+
+      <!-- Quick Live Refresh Button -->
+      <button type="button" class="action-glass-btn" id="btnRefreshPricesLive" style="margin-top: 8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        <span>Запросить актуальные цены в сетях онлайн</span>
+      </button>
     </div>
   </section>
 
   <!-- ============================================== -->
-  <!-- VIEW 2: ПРОФИЛЬ (Анкета семьи & Сервер)         -->
+  <!-- VIEW 2: ПРОФИЛЬ (Расширенные списки & Ручной ввод) -->
   <!-- ============================================== -->
   <section class="view" id="v2">
     <div class="sscroll">
       <div class="stop">
         <div>
           <h2>Настройки семьи</h2>
-          <div class="sub">Вкусы, аллергии и размер семьи</div>
+          <div class="sub">Любимое, стоп-лист и состав семьи</div>
         </div>
         <div class="sav" style="background: linear-gradient(135deg, #af52de, #3a8bf7);">⚙️</div>
       </div>
 
-      <!-- Family Size & Period Card -->
+      <!-- 1. Custom Product Manual Input Card -->
+      <div class="scard" style="border-color: rgba(58,139,247,.35); background: linear-gradient(145deg, #1b202c 0%, #1c1c1e 100%);">
+        <div class="schd">
+          <span>ДОБАВИТЬ СВОЙ ПРОДУКТ</span>
+          <span class="schd-badge" style="background: rgba(255,255,255,0.1); color:#fff;">Ручной ввод</span>
+        </div>
+        <div class="scb">
+          <div style="font-size:13px; color:#8e8e93; margin-bottom:10px;">
+            Напишите название абсолютно любого продукта и добавьте его в любимые или стоп-лист:
+          </div>
+          <div class="custom-input-box">
+            <input type="text" id="customProductInput" class="glass-input" placeholder="Например: киноа, спаржа, батат..." autocomplete="off">
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="add-btn fav" id="btnAddCustomFav" style="flex:1; justify-content:center;">
+              <span>+ В любимые ❤️</span>
+            </button>
+            <button type="button" class="add-btn stop" id="btnAddCustomStop" style="flex:1; justify-content:center;">
+              <span>+ В стоп-лист 🚫</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Favorite Products Card (with 1-click delete) -->
+      <div class="scard">
+        <div class="schd">
+          <span>ЛЮБИМЫЕ ПРОДУКТЫ (АКЦЕНТ В МЕНЮ)</span>
+          <span class="schd-badge green" id="favCountBadge">0 шт.</span>
+        </div>
+        <div class="scb">
+          <div style="font-size:13px; color:#8e8e93; margin-bottom:10px;">
+            База для приоритетного подбора блюд. Нажмите ✕ для удаления позиции:
+          </div>
+          <div class="tags" id="favTagsContainer">
+            <!-- Dynamic 1-click delete pills -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Stop-List Card (with 1-click delete) -->
+      <div class="scard">
+        <div class="schd">
+          <span>СТОП-ЛИСТ / ИСКЛЮЧЕНИЯ</span>
+          <span class="schd-badge" style="background:rgba(255,59,48,.18); color:#ff3b30;" id="stopCountBadge">0 шт.</span>
+        </div>
+        <div class="scb">
+          <div style="font-size:13px; color:#8e8e93; margin-bottom:10px;">
+            Продукты, которые категорически исключаются из рецептов. Нажмите ✕ для удаления:
+          </div>
+          <div class="tags" id="stopTagsContainer">
+            <!-- Dynamic 1-click delete pills -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Preset Catalog by Categories -->
+      <div class="scard">
+        <div class="schd">
+          <span>КАТАЛОГ БАЗОВЫХ ПРОДУКТОВ</span>
+          <span class="schd-badge">По категориям</span>
+        </div>
+        <div class="scb">
+          <div class="cat-strip" id="catStrip">
+            <button type="button" class="cat-pill active" data-cat="Мясо и птица">🥩 Мясо и птица</button>
+            <button type="button" class="cat-pill" data-cat="Рыба и морепродукты">🐟 Рыба</button>
+            <button type="button" class="cat-pill" data-cat="Овощи и зелень">🥦 Овощи</button>
+            <button type="button" class="cat-pill" data-cat="Молочные продукты и сыры">🧀 Молочка</button>
+            <button type="button" class="cat-pill" data-cat="Бакалея и крупы">🌾 Бакалея</button>
+            <button type="button" class="cat-pill" data-cat="Грибы и ягоды">🍄 Прочее</button>
+          </div>
+          <div style="font-size:12px; color:#8e8e93; margin-bottom:8px;">Нажмите на продукт для добавления:</div>
+          <div class="cat-items-grid" id="catItemsGrid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Allergies Card -->
+      <div class="scard">
+        <div class="schd">
+          <span>АЛЛЕРГИИ И ОГРАНИЧЕНИЯ</span>
+          <span class="schd-badge" style="background:rgba(255,149,0,.18); color:#ff9500;">Медицинские</span>
+        </div>
+        <div class="scb">
+          <div class="tags" id="allgTagsContainer">
+            <!-- Dynamic allergen tags -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Family Size & Period Card -->
       <div class="scard">
         <div class="schd"><span>СЕМЬЯ И ПЕРИОД</span></div>
         <div class="scb">
           <div class="stepper-wrap">
             <div>
               <div style="font-size:16px; font-weight:700;">Размер семьи</div>
-              <div style="font-size:13px; color:#8e8e93;">Расчет точных граммовок порций</div>
+              <div style="font-size:13px; color:#8e8e93;">Масштабирование порций в рецептах</div>
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
               <button class="step-btn" id="btnMinusFamily" type="button">−</button>
@@ -179,55 +279,9 @@
         </div>
       </div>
 
-      <!-- Favorites Card -->
-      <div class="scard">
-        <div class="schd"><span>ЛЮБИМЫЕ ПРОДУКТЫ (АКЦЕНТ)</span></div>
-        <div class="scb">
-          <div class="tags" id="favTagsWrap">
-            <span class="tg fav-tag selected" data-val="курица">🍗 Курица</span>
-            <span class="tg fav-tag selected" data-val="рыба">🐟 Рыба / Лосось</span>
-            <span class="tg fav-tag selected" data-val="авокадо">🥑 Авокадо</span>
-            <span class="tg fav-tag" data-val="говядина">🥩 Говядина</span>
-            <span class="tg fav-tag" data-val="паста">🍝 Паста</span>
-            <span class="tg fav-tag" data-val="творог">🧀 Творог</span>
-            <span class="tg fav-tag" data-val="рис">🍚 Рис</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Stop List Card -->
-      <div class="scard">
-        <div class="schd"><span>СТОП-ЛИСТ (НЕ ВКЛЮЧАТЬ В БЛЮДА)</span></div>
-        <div class="scb">
-          <div class="tags" id="stopTagsWrap">
-            <span class="tg stop-tag selected" data-val="лук">🧅 Лук</span>
-            <span class="tg stop-tag" data-val="грибы">🍄 Грибы</span>
-            <span class="tg stop-tag" data-val="кинза">🫑 Кинза</span>
-            <span class="tg stop-tag" data-val="свинина">🐷 Свинина</span>
-            <span class="tg stop-tag" data-val="кабачки">🥒 Кабачки</span>
-            <span class="tg stop-tag" data-val="печень">🫀 Субпродукты</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Allergies Card -->
-      <div class="scard">
-        <div class="schd"><span>АЛЛЕРГИИ И ОГРАНИЧЕНИЯ</span></div>
-        <div class="scb">
-          <div class="tags" id="allgTagsWrap">
-            <span class="tg allg-tag" data-val="глютен">🌾 Без глютена</span>
-            <span class="tg allg-tag" data-val="лактоза">🥛 Без лактозы</span>
-            <span class="tg allg-tag" data-val="орехи">🥜 Без орехов</span>
-            <span class="tg allg-tag" data-val="яйца">🥚 Без яиц</span>
-            <span class="tg allg-tag" data-val="морепродукты">🦐 Без морепродуктов</span>
-            <span class="tg allg-tag" data-val="мясо">🌱 Вегетарианство</span>
-          </div>
-        </div>
-      </div>
-
       <!-- Save Profile Button -->
       <button type="button" class="action-glass-btn" id="btnSaveProfile">
-        <span>Сохранить профиль семьи</span>
+        <span>Сохранить профиль и пересчитать</span>
       </button>
 
       <!-- Health Check & Server Monitoring Card -->
@@ -237,9 +291,9 @@
           <span class="schd-badge green">200 OK</span>
         </div>
         <div class="scb" style="font-size:14px; line-height:1.6; color:#a8a8ae;">
-          <div>• <strong>Методы мониторинга:</strong> Поддерживает GET и легкий HEAD для UptimeRobot без пробуждения тяжелой логики.</div>
-          <div>• <strong>Автообновление:</strong> Каждый понедельник в 09:00 через APScheduler.</div>
-          <div>• <strong>Торговые сети:</strong> Пятерочка, Магнит, Лента.</div>
+          <div>• <strong>Парсер цен:</strong> Поиск актуальных котировок в реальном времени (Пятерочка, Магнит, Лента).</div>
+          <div>• <strong>Автообновление:</strong> Каждый понедельник в 09:00.</div>
+          <div>• <strong>UptimeRobot:</strong> Маршрут <code>/health</code> поддерживает легкий метод HEAD.</div>
           <button type="button" class="action-glass-btn" id="btnTestHealthPing" style="margin-top:14px; background: rgba(255,255,255,0.08); box-shadow:none; border:1px solid rgba(255,255,255,0.15);">
             <span>⚡️ Проверить HEAD /health (Ping)</span>
           </button>
@@ -252,7 +306,6 @@
   <!-- LIQUID GLASS FLOATING DOCK & TAB BAR           -->
   <!-- ============================================== -->
   <div class="dock">
-    <!-- Liquid Glass Tab Bar (843×190u, droplet with spring physics) -->
     <div class="bar" id="bar" style="--x:0;--tx:0;--sx:1;--sy:1;--p:0">
       <div class="matte base" id="base"></div>
       <div class="fil" id="fil"></div>
@@ -299,7 +352,7 @@
       <div class="glass thumb" id="thumb"><div class="lens" id="lens"></div></div>
     </div>
 
-    <!-- Liquid Glass Circle Action Button (Refresh / Health Ping) -->
+    <!-- Liquid Glass Circle Action Button (Refresh / Live Prices) -->
     <div class="matte circle" id="circle" role="button" tabindex="0" aria-label="Обновить меню">
       <span class="ics">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6">

@@ -142,6 +142,67 @@ class Database:
             await db.commit()
             return True
 
+    async def add_favorite_item(self, user_id: int, item: str) -> Optional[UserProfile]:
+        profile = await self.get_user_profile(user_id)
+        if not profile:
+            profile = UserProfile(telegram_id=user_id, favorite_products=[])
+        item_clean = item.strip().lower()
+        if item_clean and item_clean not in [x.lower() for x in profile.favorite_products]:
+            profile.favorite_products.append(item.strip())
+            # If it was in stop-list, remove it
+            profile.stop_list = [x for x in profile.stop_list if x.lower() != item_clean]
+            await self.save_user_profile(profile)
+        return profile
+
+    async def remove_favorite_item(self, user_id: int, item: str) -> Optional[UserProfile]:
+        profile = await self.get_user_profile(user_id)
+        if not profile:
+            return None
+        item_clean = item.strip().lower()
+        profile.favorite_products = [x for x in profile.favorite_products if x.lower() != item_clean]
+        await self.save_user_profile(profile)
+        return profile
+
+    async def add_stop_item(self, user_id: int, item: str) -> Optional[UserProfile]:
+        profile = await self.get_user_profile(user_id)
+        if not profile:
+            profile = UserProfile(telegram_id=user_id, stop_list=[])
+        item_clean = item.strip().lower()
+        if item_clean and item_clean not in [x.lower() for x in profile.stop_list]:
+            profile.stop_list.append(item.strip())
+            # If it was in favorites, remove it
+            profile.favorite_products = [x for x in profile.favorite_products if x.lower() != item_clean]
+            await self.save_user_profile(profile)
+        return profile
+
+    async def remove_stop_item(self, user_id: int, item: str) -> Optional[UserProfile]:
+        profile = await self.get_user_profile(user_id)
+        if not profile:
+            return None
+        item_clean = item.strip().lower()
+        profile.stop_list = [x for x in profile.stop_list if x.lower() != item_clean]
+        await self.save_user_profile(profile)
+        return profile
+
+    async def add_allergy_item(self, user_id: int, item: str) -> Optional[UserProfile]:
+        profile = await self.get_user_profile(user_id)
+        if not profile:
+            profile = UserProfile(telegram_id=user_id, allergies=[])
+        item_clean = item.strip().lower()
+        if item_clean and item_clean not in [x.lower() for x in profile.allergies]:
+            profile.allergies.append(item.strip())
+            await self.save_user_profile(profile)
+        return profile
+
+    async def remove_allergy_item(self, user_id: int, item: str) -> Optional[UserProfile]:
+        profile = await self.get_user_profile(user_id)
+        if not profile:
+            return None
+        item_clean = item.strip().lower()
+        profile.allergies = [x for x in profile.allergies if x.lower() != item_clean]
+        await self.save_user_profile(profile)
+        return profile
+
     async def get_all_active_users(self) -> List[int]:
         """Return list of telegram_ids of all active users"""
         async with aiosqlite.connect(self.db_path) as db:

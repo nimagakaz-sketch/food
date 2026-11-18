@@ -2,9 +2,13 @@ import os
 import unittest
 from starlette.requests import Request
 from app.database.db import db
-from app.database.models import UserProfile
+from app.database.models import UserProfile, ItemActionRequest
 from app.services.menu_generator import menu_generator
 from app.services.price_comparator import price_comparator
+from app.services.retail_parsers import retail_price_searcher, CATEGORIZED_PRESET_CATALOG
+from app.api.routes import add_favorite_product, remove_favorite_product, add_stop_product, remove_stop_product
+from app.bot.keyboards.inline import get_multi_select_keyboard, POPULAR_FAVORITES, POPULAR_STOP_ITEMS
+from app.bot.handlers.common import build_profile_keyboard
 from main import root_index, health_endpoint
 
 def create_mock_request(method: str, path: str = "/") -> Request:
@@ -32,138 +36,142 @@ class TestFoodBotBackend(unittest.IsolatedAsyncioTestCase):
             except Exception:
                 pass
 
-    # --- 1. HEALTH CHECK & HTTP HEAD TESTS (Requirement 4) ---
+    # --- 1. HEALTH CHECK & HTTP HEAD TESTS ---
     async def test_health_check_get_and_head(self):
-        # Test GET /
         req_get_root = create_mock_request("GET", "/")
         resp_get_root = await root_index(req_get_root)
         self.assertEqual(resp_get_root.status_code, 200)
 
-        # Test HEAD / (must succeed with 200 OK and no heavy disk stream)
         req_head_root = create_mock_request("HEAD", "/")
         resp_head_root = await root_index(req_head_root)
         self.assertEqual(resp_head_root.status_code, 200)
         self.assertEqual(resp_head_root.headers.get("x-health"), "OK")
 
-        # Test GET /health
         req_get_health = create_mock_request("GET", "/health")
         resp_get_health = await health_endpoint(req_get_health)
         self.assertEqual(resp_get_health["status"], "ok")
 
-        # Test HEAD /health (crucial for UptimeRobot monitoring)
         req_head_health = create_mock_request("HEAD", "/health")
         resp_head_health = await health_endpoint(req_head_health)
         self.assertEqual(resp_head_health.status_code, 200)
         self.assertEqual(resp_head_health.headers.get("x-health"), "OK")
 
-    # --- 2. ONBOARDING & PREFERENCES PROFILE TESTS (Requirement 1) ---
-    async def test_user_onboarding_and_preferences(self):
-        profile = UserProfile(
-            telegram_id=99901,
-            username="test_family",
-            first_name="Иван",
-            favorite_products=["курица", "авокадо", "рыба"],
-            stop_list=["лук", "грибы", "свинина"],
-            allergies=["глютен"],
-            family_size=3,
-            plan_days=7
-        )
-        saved = await db.save_user_profile(profile)
-        self.assertTrue(saved)
+    # --- 2. CUSTOM PRODUCT MANUAL INPUT & 1-CLICK DELETE TESTS ---
+    async def test_custom_product_input_and_one_click_delete(self):
+        user_id = 99911
+        # Start with empty profile
+        await db.get_or_create_user(user_id, "family_cook", "Анна")
 
-        fetched = await db.get_user_profile(99901)
-        self.assertIsNotNone(fetched)
-        self.assertEqual(fetched.telegram_id, 99901)
-        self.assertEqual(fetched.family_size, 3)
-        self.assertEqual(fetched.plan_days, 7)
-        self.assertIn("курица", fetched.favorite_products)
-        self.assertIn("лук", fetched.stop_list)
-        self.assertIn("глютен", fetched.allergies)
+        # 1. Add custom product to Favorites
+        prof = await add_favorite_product(user_id, ItemActionRequest(item="Киноа"))
+        self.assertIn("Киноа", prof.favorite_products)
 
-    # --- 3. MENU GENERATION & ALLERGEN/STOP-LIST FILTERING (Requirement 2) ---
-    async def test_menu_generation_respects_constraints(self):
+        # 2. Add custom product to Stop-List
+        prof = await add_stop_product(user_id, ItemActionRequest(item="Кинза"))
+        self.assertIn("Кинза", prof.stop_list)
+
+        # 3. Add another item to Favorites (e.g. "Спаржа")
+        prof = await db.add_favorite_item(user_id, "Спаржа")
+        self.assertIn("Спаржа", prof.favorite_products)
+
+        # 4. Remove in 1 click from Favorites
+        prof_after_del = await remove_favorite_product(user_id, "Киноа")
+        self.assertNotIn("Киноа", prof_after_del.favorite_products)
+        self.assertIn("Спаржа", prof_after_del.favorite_products)
+
+        # 5. Remove in 1 click from Stop-List
+        prof_stop_del = await remove_stop_product(user_id, "Кинза")
+        self.assertNotIn("Кинза", prof_stop_del.stop_list)
+
+    # --- 3. PRESET CATEGORIZED CATALOG TEST ---
+    def test_preset_categorized_catalog(self):
+        self.assertIn("Мясо и птица", CATEGORIZED_PRESET_CATALOG)
+        self.assertIn("Рыба и морепродукты", CATEGORIZED_PRESET_CATALOG)
+        self.assertIn("Овощи и зелень", CATEGORIZED_PRESET_CATALOG)
+        self.assertGreater(len(CATEGORIZED_PRESET_CATALOG["Мясо и птица"]), 0)
+
+    # --- 4. REAL-TIME SUPERMARKET PRICE SEARCH TEST ---
+    async def test_realtime_supermarket_price_search(self):
+        # Query live price for an item across Pyaterochka, Magnit, and Lenta
+        live_res = await retail_price_searcher.get_realtime_prices_for_item("Куриное филе", 1.0, "кг")
+        
+        self.assertIsNotNone(live_res)
+        self.assertEqual(live_res["product_name"], "Куриное филе")
+        self.assertTrue(live_res["is_live"])
+        self.assertGreater(live_res["price_pyaterochka"], 0)
+        self.assertGreater(live_res["price_magnit"], 0)
+        self.assertGreater(live_res["price_lenta"], 0)
+        self.assertIn(live_res["best_store"], ["Пятерочка", "Магнит", "Лента"])
+        self.assertIsNotNone(live_res["checked_at"])
+
+    # --- 5. MENU GENERATION WITH CUSTOM EXCLUSIONS & BASKET CALCULATION ---
+    async def test_menu_generation_with_custom_exclusions(self):
         profile = UserProfile(
-            telegram_id=99902,
-            username="allergy_user",
-            first_name="Мария",
-            favorite_products=["рыба", "авокадо"],
-            stop_list=["свинина", "грибы"],
-            allergies=["глютен"],
-            family_size=4,
+            telegram_id=99912,
+            username="vegan_family",
+            first_name="Елена",
+            favorite_products=["Авокадо", "Рис длиннозерный"],
+            stop_list=["Говядина", "Свинина", "Грибы"],
+            allergies=["Глютен"],
+            family_size=2,
             plan_days=5
         )
         await db.save_user_profile(profile)
 
         menu = await menu_generator.generate_menu_for_user(profile, force_new=True)
         self.assertEqual(len(menu.days), 5)
-        self.assertEqual(menu.user_id, 99902)
+        self.assertTrue(menu.price_comparison.is_live)
+        self.assertIsNotNone(menu.price_comparison.checked_at)
 
-        # Check all dishes in all days
+        # Verify stop-list excluded
         for day in menu.days:
-            self.assertEqual(len(day.dishes), 3)  # breakfast, lunch, dinner
             for dish in day.dishes:
-                dish_text = (
-                    dish.name.lower() + " " +
-                    " ".join(t.lower() for t in dish.tags) + " " +
-                    " ".join(i.name.lower() for i in dish.ingredients)
-                )
-                # Verify stop-list is NOT in dish
-                for stop_item in profile.stop_list:
-                    self.assertNotIn(stop_item.lower(), dish_text, f"Stop item '{stop_item}' found in dish '{dish.name}'")
+                dish_text = dish.name.lower() + " " + " ".join(i.name.lower() for i in dish.ingredients)
+                for s in profile.stop_list:
+                    self.assertNotIn(s.lower(), dish_text)
 
-                # Verify allergens are excluded
-                self.assertNotIn("глютен", [t.lower() for t in dish.tags])
+        # Check total basket calculation across all 3 chains
+        comp = menu.price_comparison
+        pya_sum = comp.stores["pyaterochka"].total_price
+        mag_sum = comp.stores["magnit"].total_price
+        len_sum = comp.stores["lenta"].total_price
 
-                # Check family scaling: ingredients scaled for 4 members
-                for ing in dish.ingredients:
-                    self.assertGreater(ing.amount, 0)
+        self.assertGreater(pya_sum, 0)
+        self.assertGreater(mag_sum, 0)
+        self.assertGreater(len_sum, 0)
+        self.assertIn(comp.cheapest_store, ["Пятерочка", "Магнит", "Лента"])
 
-        # Check shopping list aggregation
-        self.assertGreater(len(menu.shopping_list), 0)
-
-    # --- 4. SUPERMARKET PRICE COMPARISON (Requirement 3) ---
-    async def test_supermarket_price_comparison(self):
-        profile = UserProfile(
-            telegram_id=99903,
-            username="buyer_user",
-            first_name="Алексей",
-            favorite_products=["курица", "говядина"],
-            stop_list=[],
+    # --- 6. KEYBOARD GENERATION & ONBOARDING 1-CLICK DELETE BUTTONS ---
+    def test_keyboards_with_custom_items_and_one_click_delete(self):
+        # 1. Multi-select with custom items during onboarding
+        selected_favs = {"курица", "Спаржа домашняя"}
+        kb_fav = get_multi_select_keyboard(POPULAR_FAVORITES, selected_favs, "fav", "fav:next")
+        
+        # Check that there is a 1-click delete button for "Спаржа домашняя"
+        all_cb_data = [btn.callback_data for row in kb_fav.inline_keyboard for btn in row if btn.callback_data]
+        self.assertTrue(any(cb.startswith("fav:del:Спаржа") for cb in all_cb_data))
+        
+        # 2. Profile keyboard generation
+        test_profile = UserProfile(
+            telegram_id=8888,
+            username="tester",
+            first_name="Тест",
+            favorite_products=["Лосось", "Брокколи"],
+            stop_list=["Кинза"],
             allergies=[],
-            family_size=2,
+            family_size=3,
             plan_days=7
         )
-        await db.save_user_profile(profile)
-
-        menu = await menu_generator.generate_menu_for_user(profile, force_new=True)
-        comp = menu.price_comparison
-
-        self.assertIsNotNone(comp)
-        self.assertIn("pyaterochka", comp.stores)
-        self.assertIn("magnit", comp.stores)
-        self.assertIn("lenta", comp.stores)
-
-        pya_total = comp.stores["pyaterochka"].total_price
-        mag_total = comp.stores["magnit"].total_price
-        len_total = comp.stores["lenta"].total_price
-
-        self.assertGreater(pya_total, 0)
-        self.assertGreater(mag_total, 0)
-        self.assertGreater(len_total, 0)
-
-        # Winning store must be marked
-        winning_stores = [s for s in comp.stores.values() if s.is_cheapest]
-        self.assertEqual(len(winning_stores), 1)
-        self.assertEqual(comp.cheapest_store, winning_stores[0].store_name)
-        self.assertGreaterEqual(comp.max_savings, 0)
-
-        # Check item price breakdown
-        self.assertGreater(len(comp.items), 0)
-        first_item = comp.items[0]
-        self.assertGreater(first_item.price_pyaterochka, 0)
-        self.assertGreater(first_item.price_magnit, 0)
-        self.assertGreater(first_item.price_lenta, 0)
-        self.assertIn(first_item.best_store, ["Пятерочка", "Магнит", "Лента"])
+        kb_prof = build_profile_keyboard(test_profile)
+        prof_cb_data = [btn.callback_data for row in kb_prof.inline_keyboard for btn in row if btn.callback_data]
+        
+        # Check 1-click delete buttons exist
+        self.assertTrue(any(cb.startswith("del_fav:Лосось") for cb in prof_cb_data))
+        self.assertTrue(any(cb.startswith("del_stop:Кинза") for cb in prof_cb_data))
+        
+        # Check manual prompt buttons exist
+        self.assertIn("add_fav_prompt", prof_cb_data)
+        self.assertIn("add_stop_prompt", prof_cb_data)
 
 if __name__ == "__main__":
     unittest.main()

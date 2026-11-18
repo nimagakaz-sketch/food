@@ -4,10 +4,10 @@ from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel
 from app.database.db import db
-from app.database.models import UserProfile, UserProfileCreate
+from app.database.models import UserProfile, UserProfileCreate, ItemActionRequest
 from app.services.menu_generator import menu_generator
 from app.services.price_comparator import price_comparator
-from app.services.recipe_catalog import BASELINE_STORE_PRICES
+from app.services.retail_parsers import CATEGORIZED_PRESET_CATALOG, retail_price_searcher
 
 router = APIRouter()
 SERVER_START_TIME = time.time()
@@ -22,18 +22,23 @@ async def health_check():
         "time": datetime.utcnow().isoformat()
     }
 
+# --- Preset Catalog ---
+@router.get("/api/catalog/preset")
+async def get_preset_catalog():
+    """Get preset categorized catalog of products for easy selection"""
+    return CATEGORIZED_PRESET_CATALOG
+
 # --- Profile Endpoints ---
 @router.get("/api/profile/{user_id}", response_model=UserProfile)
 async def get_profile(user_id: int):
     profile = await db.get_user_profile(user_id)
     if not profile:
-        # Return default profile for new or web users
         return UserProfile(
             telegram_id=user_id,
             username="",
             first_name="Гость",
-            favorite_products=["курица", "авокадо", "рыба"],
-            stop_list=[],
+            favorite_products=["Куриное филе", "Красная рыба (лосось/форель)", "Авокадо"],
+            stop_list=["Лук репчатый"],
             allergies=[],
             family_size=2,
             plan_days=7
@@ -44,7 +49,60 @@ async def get_profile(user_id: int):
 async def update_profile(profile_in: UserProfileCreate):
     profile = UserProfile(**profile_in.model_dump())
     await db.save_user_profile(profile)
-    # Regenerate menu with new preferences
+    await menu_generator.generate_menu_for_user(profile, force_new=True)
+    return profile
+
+# --- Granular 1-Click Item Add / Remove Endpoints ---
+@router.post("/api/profile/{user_id}/favorites", response_model=UserProfile)
+async def add_favorite_product(user_id: int, req: ItemActionRequest):
+    """Add a custom product to user's favorites"""
+    if not req.item.strip():
+        raise HTTPException(status_code=400, detail="Item name cannot be empty")
+    profile = await db.add_favorite_item(user_id, req.item.strip())
+    # Regenerate menu in background or return updated profile
+    await menu_generator.generate_menu_for_user(profile, force_new=True)
+    return profile
+
+@router.delete("/api/profile/{user_id}/favorites/{item}", response_model=UserProfile)
+async def remove_favorite_product(user_id: int, item: str):
+    """Remove a product from user's favorites in 1 click"""
+    profile = await db.remove_favorite_item(user_id, item)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    await menu_generator.generate_menu_for_user(profile, force_new=True)
+    return profile
+
+@router.post("/api/profile/{user_id}/stop-list", response_model=UserProfile)
+async def add_stop_product(user_id: int, req: ItemActionRequest):
+    """Add a custom product to user's stop-list"""
+    if not req.item.strip():
+        raise HTTPException(status_code=400, detail="Item name cannot be empty")
+    profile = await db.add_stop_item(user_id, req.item.strip())
+    await menu_generator.generate_menu_for_user(profile, force_new=True)
+    return profile
+
+@router.delete("/api/profile/{user_id}/stop-list/{item}", response_model=UserProfile)
+async def remove_stop_product(user_id: int, item: str):
+    """Remove a product from user's stop-list in 1 click"""
+    profile = await db.remove_stop_item(user_id, item)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    await menu_generator.generate_menu_for_user(profile, force_new=True)
+    return profile
+
+@router.post("/api/profile/{user_id}/allergies", response_model=UserProfile)
+async def add_allergy(user_id: int, req: ItemActionRequest):
+    """Add an allergy/restriction to user's profile"""
+    profile = await db.add_allergy_item(user_id, req.item.strip())
+    await menu_generator.generate_menu_for_user(profile, force_new=True)
+    return profile
+
+@router.delete("/api/profile/{user_id}/allergies/{item}", response_model=UserProfile)
+async def remove_allergy(user_id: int, item: str):
+    """Remove an allergy/restriction from user's profile in 1 click"""
+    profile = await db.remove_allergy_item(user_id, item)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
     await menu_generator.generate_menu_for_user(profile, force_new=True)
     return profile
 
@@ -57,8 +115,8 @@ async def get_user_menu(user_id: int, refresh: bool = False):
             telegram_id=user_id,
             username="Пользователь",
             first_name="Пользователь",
-            favorite_products=["курица", "овощи", "рыба"],
-            stop_list=[],
+            favorite_products=["Куриное филе", "Красная рыба (лосось/форель)", "Авокадо"],
+            stop_list=["Лук репчатый"],
             allergies=[],
             family_size=2,
             plan_days=7
@@ -94,29 +152,25 @@ async def get_price_comparison(user_id: int):
         return comp.model_dump() if hasattr(comp, "model_dump") else comp
     return menu.price_comparison
 
-@router.get("/api/prices/catalog")
-async def get_price_catalog():
-    """Get all supermarket prices across Pyaterochka, Magnit, and Lenta"""
-    prices = await db.get_all_prices()
-    if not prices:
-        await price_comparator.init_prices()
-        prices = await db.get_all_prices()
-    return list(prices.values())
+@router.get("/api/prices/live")
+async def query_live_price(product: str = Query(..., description="Name of the product")):
+    """Direct live price query for any item across Pyaterochka, Magnit, and Lenta"""
+    res = await retail_price_searcher.get_realtime_prices_for_item(product, 1.0, "кг")
+    return res
 
 # --- Bot & System Status ---
 @router.get("/api/status")
 async def get_system_status():
     uptime_sec = int(time.time() - SERVER_START_TIME)
     users = await db.get_all_active_users()
-    prices = await db.get_all_prices()
 
     return {
         "status": "online",
         "uptime_seconds": uptime_sec,
         "uptime_formatted": f"{uptime_sec // 3600}ч {(uptime_sec % 3600) // 60}м {uptime_sec % 60}с",
         "active_users_count": len(users),
-        "tracked_products_count": len(prices),
         "scheduler_active": True,
         "auto_update": "Каждый понедельник в 09:00",
-        "stores_monitored": ["Пятерочка", "Магнит", "Лента"]
+        "stores_monitored": ["Пятерочка", "Магнит", "Лента"],
+        "pricing_mode": "Strict Real-Time Catalogs"
     }

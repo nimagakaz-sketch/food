@@ -41,9 +41,9 @@ def get_multi_select_keyboard(
     next_callback: str,
     allow_skip: bool = True
 ) -> InlineKeyboardMarkup:
-    """Creates a grid of toggleable items with checkmarks and a Next button"""
+    """Creates a grid of toggleable items with checkmarks, custom item deletion, and a Next button"""
     rows = []
-    # 2 items per row
+    # 2 preset items per row
     current_row = []
     for label, val in items:
         is_sel = val in selected
@@ -55,6 +55,19 @@ def get_multi_select_keyboard(
             current_row = []
     if current_row:
         rows.append(current_row)
+
+    # 1-Click Delete buttons for custom typed items not in preset items
+    preset_vals = {val.lower() for _, val in items}
+    custom_items = [s for s in selected if s.lower() not in preset_vals]
+    if custom_items:
+        del_row = []
+        for c_item in custom_items:
+            del_row.append(InlineKeyboardButton(text=f"✕ {c_item}", callback_data=f"{prefix}:del:{c_item[:20]}"))
+            if len(del_row) == 2:
+                rows.append(del_row)
+                del_row = []
+        if del_row:
+            rows.append(del_row)
 
     # Action row: Next or Skip
     action_row = []
@@ -134,7 +147,8 @@ def get_menu_navigation_keyboard(day_count: int, current_day: int = 1) -> Inline
 def get_prices_view_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="📋 Полный список продуктов", callback_data="view_shopping_list")
+            InlineKeyboardButton(text="🔄 Обновить цены онлайн", callback_data="refresh_prices_live"),
+            InlineKeyboardButton(text="📋 Полный список покупок", callback_data="view_shopping_list")
         ],
         [
             InlineKeyboardButton(text="🍽 Вернуться к меню", callback_data="view_menu"),

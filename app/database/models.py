@@ -1,6 +1,9 @@
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
+class ItemActionRequest(BaseModel):
+    item: str
+
 class UserProfileCreate(BaseModel):
     telegram_id: int
     username: Optional[str] = None
@@ -48,6 +51,10 @@ class StoreItemPrice(BaseModel):
     price_magnit: float
     price_lenta: float
     best_store: str
+    pya_title: Optional[str] = None
+    mag_title: Optional[str] = None
+    len_title: Optional[str] = None
+    is_live: bool = True
 
 class StoreBasketTotal(BaseModel):
     store_name: str
@@ -62,6 +69,8 @@ class PriceComparison(BaseModel):
     cheapest_store: str
     max_savings: float
     hybrid_recommendation: Optional[str] = None
+    is_live: bool = True
+    checked_at: Optional[str] = None
 
 class WeeklyMenu(BaseModel):
     id: Optional[int] = None

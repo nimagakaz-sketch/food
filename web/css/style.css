@@ -744,3 +744,214 @@ html, body {
   transform: scale(.98);
   opacity: .9;
 }
+
+/* ==========================================================================
+   Custom Product Input, 1-Click Delete Tags & Real-Time Price Indicators
+   ========================================================================== */
+
+.custom-input-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.glass-input {
+  flex: 1;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 0 16px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  transition: all .2s;
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--blue);
+  box-shadow: 0 0 12px rgba(58, 139, 247, 0.35);
+}
+
+.glass-input::placeholder {
+  color: #8e8e93;
+}
+
+.add-btn {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform .15s, opacity .15s;
+  white-space: nowrap;
+}
+
+.add-btn:active {
+  transform: scale(.95);
+}
+
+.add-btn.fav {
+  background: rgba(52, 199, 89, 0.22);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.45);
+}
+
+.add-btn.stop {
+  background: rgba(255, 59, 48, 0.22);
+  color: #ff3b30;
+  border: 1px solid rgba(255, 59, 48, 0.45);
+}
+
+/* Tag Pill with 1-Click Delete */
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform .15s, opacity .15s;
+  animation: popIn .2s cubic-bezier(.2, 1.2, .3, 1);
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.tag-pill.fav {
+  background: rgba(52, 199, 89, 0.18);
+  border: 1px solid rgba(52, 199, 89, 0.45);
+  color: #34c759;
+}
+
+.tag-pill.stop {
+  background: rgba(255, 59, 48, 0.18);
+  border: 1px solid rgba(255, 59, 48, 0.45);
+  color: #ff3b30;
+}
+
+.tag-pill.allg {
+  background: rgba(255, 149, 0, 0.18);
+  border: 1px solid rgba(255, 149, 0, 0.45);
+  color: #ff9500;
+}
+
+.tag-del-btn {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  transition: all .15s;
+}
+
+.tag-del-btn:hover, .tag-del-btn:active {
+  background: #fff;
+  color: #000;
+  transform: scale(1.15);
+}
+
+/* Preset Catalog Categories & Chips */
+.cat-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 12px;
+  scrollbar-width: none;
+}
+
+.cat-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.cat-pill {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8e8e93;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .18s;
+}
+
+.cat-pill.active {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+.cat-items-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 6px;
+}
+
+.cat-item-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e5e5ea;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.cat-item-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cat-item-btn:active {
+  transform: scale(.95);
+}
+
+/* Live Pulse Indicator */
+.live-pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: liveBlink 1.8s infinite ease-in-out;
+}
+
+@keyframes liveBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}

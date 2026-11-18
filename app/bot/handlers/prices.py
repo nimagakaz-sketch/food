@@ -34,10 +34,13 @@ async def show_price_comparison(event: Message | CallbackQuery):
 
     best_store = comp.cheapest_store
     savings = int(comp.max_savings)
+    checked_time = comp.checked_at or "только что"
 
     text = (
-        "🛒 *СРАВНЕНИЕ ЦЕН В СУПЕРМАРКЕТАХ*\n"
-        f"Расчет полной корзины на семью из {profile.family_size} чел. на {profile.plan_days} дн.:\n"
+        "🛒 *АКТУАЛЬНЫЕ ЦЕНЫ В СУПЕРМАРКЕТАХ*\n"
+        "🟢 _Запрошено в реальном времени из каталогов сетей_\n"
+        f"⏱ *Обновлено:* {checked_time}\n"
+        f"👨‍👩‍👧‍👦 Корзина на семью из {profile.family_size} чел. на {profile.plan_days} дн.:\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n\n"
     )
 
@@ -55,7 +58,7 @@ async def show_price_comparison(event: Message | CallbackQuery):
     )
 
     for idx, s in enumerate(sorted_stores):
-        s_dict = s if isinstance(s, dict) else s.dict()
+        s_dict = s if isinstance(s, dict) else (s.model_dump() if hasattr(s, "model_dump") else s.dict())
         s_code = s_dict.get("store_code", "")
         s_name = s_dict.get("store_name", "")
         total = int(s_dict.get("total_price", 0))
@@ -74,12 +77,12 @@ async def show_price_comparison(event: Message | CallbackQuery):
     if comp.hybrid_recommendation:
         text += f"\n{comp.hybrid_recommendation}\n"
 
-    text += "\n📊 *Детализация цен по ключевым продуктам:*\n"
-    text += "_(Пят. / Магн. / Лента)_\n\n"
+    text += "\n📊 *Детализация цен по продуктам (актуально онлайн):*\n"
+    text += "_(Пятерочка / Магнит / Лента)_\n\n"
 
-    # Show top items breakdown
-    for it in items[:12]:
-        it_dict = it if isinstance(it, dict) else it.dict()
+    # Show items breakdown
+    for it in items[:15]:
+        it_dict = it if isinstance(it, dict) else (it.model_dump() if hasattr(it, "model_dump") else it.dict())
         p_name = it_dict.get("product_name", "")
         amt = it_dict.get("amount_needed", 0)
         unit = it_dict.get("unit", "")
@@ -104,6 +107,15 @@ async def show_price_comparison(event: Message | CallbackQuery):
     else:
         await event.answer(text, parse_mode="Markdown", reply_markup=kb)
 
+@router.callback_query(F.data == "refresh_prices_live")
+async def callback_refresh_prices(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    profile = await db.get_user_profile(user_id)
+    if profile:
+        await callback.answer("🔄 Опрашиваем онлайн-каталоги Пятерочки, Магнита и Ленты...", show_alert=False)
+        await menu_generator.generate_menu_for_user(profile, force_new=True)
+    await show_price_comparison(callback)
+
 @router.callback_query(F.data == "view_shopping_list")
 async def show_full_shopping_list(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -118,7 +130,7 @@ async def show_full_shopping_list(callback: CallbackQuery):
 
     categories = {}
     for ing in menu_obj.shopping_list:
-        ing_dict = ing if isinstance(ing, dict) else ing.dict()
+        ing_dict = ing if isinstance(ing, dict) else (ing.model_dump() if hasattr(ing, "model_dump") else ing.dict())
         cat = ing_dict.get("category", "прочее").capitalize()
         categories.setdefault(cat, []).append(ing_dict)
 
