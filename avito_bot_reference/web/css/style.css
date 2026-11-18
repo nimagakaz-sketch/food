@@ -1,0 +1,1641 @@
+/* ==========================================================================
+   Telegram Mini App (TMA) Theme — Avito Radar
+   Native Telegram WebApp styling (No phone shell/mockup)
+   ========================================================================== */
+
+:root {
+  --tg-bg: var(--tg-theme-bg-color, #000000);
+  --tg-secondary: var(--tg-theme-secondary-bg-color, #121214);
+  --tg-card: #1c1c1e;
+  --tg-card-pressed: #2c2c2e;
+  --tg-border: rgba(255, 255, 255, 0.08);
+  --tg-divider: rgba(255, 255, 255, 0.08);
+
+  --tg-text: var(--tg-theme-text-color, #ffffff);
+  --tg-hint: var(--tg-theme-hint-color, #8e8e93);
+  --tg-tertiary: #636366;
+
+  /* Telegram Palette */
+  --tg-blue: var(--tg-theme-button-color, #007aff);
+  --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
+  --tg-purple: #af52de;
+  --tg-green: #34c759;
+  --tg-orange: #ff9500;
+  --tg-red: #ff3b30;
+  --tg-slate: #636366;
+
+  --font-tg: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Helvetica Neue", sans-serif;
+  --font-mono: 'JetBrains Mono', Menlo, Monaco, Consolas, monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--tg-bg);
+  color: var(--tg-text);
+  font-family: var(--font-tg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   Telegram WebApp Container (Full screen on mobile, centered on desktop)
+   ========================================================================== */
+.tg-app-container {
+  width: 100%;
+  max-width: 640px;
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: var(--tg-bg);
+}
+
+/* ==========================================================================
+   Telegram Top Navigation Header
+   ========================================================================== */
+.tg-navbar {
+  padding: 12px 16px 10px;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-bottom: 0.5px solid var(--tg-divider);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 700;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.navbar-left, .navbar-right {
+  display: flex;
+  align-items: center;
+  min-width: 60px;
+}
+
+.navbar-right {
+  justify-content: flex-end;
+}
+
+.nav-text-btn {
+  background: none;
+  border: none;
+  color: var(--tg-blue);
+  font-family: var(--font-tg);
+  font-size: 0.98rem;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: opacity 0.15s ease;
+}
+
+.nav-text-btn:active {
+  opacity: 0.6;
+}
+
+.navbar-title-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.navbar-title-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.navbar-title {
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--tg-text);
+}
+
+.tg-verified-badge {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-sub {
+  font-size: 0.74rem;
+  color: var(--tg-hint);
+  font-weight: 400;
+  margin-top: 1px;
+}
+
+.navbar-sub.online {
+  color: var(--tg-green);
+}
+
+.tg-circle-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--tg-card);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  color: var(--tg-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tg-circle-action-btn:active {
+  transform: scale(0.9);
+  background: var(--tg-card-pressed);
+}
+
+.tg-circle-action-btn.active-running {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+/* ==========================================================================
+   Telegram Search Subheader
+   ========================================================================== */
+.tg-search-subheader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 10px;
+  background: rgba(0, 0, 0, 0.88);
+  border-bottom: 0.5px solid var(--tg-divider);
+  z-index: 690;
+  flex-shrink: 0;
+}
+
+.tg-search-box {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-ico {
+  position: absolute;
+  left: 12px;
+  color: var(--tg-hint);
+  pointer-events: none;
+}
+
+.tg-search-input {
+  width: 100%;
+  background: var(--tg-card);
+  border: 0.5px solid transparent;
+  border-radius: 10px;
+  padding: 8px 12px 8px 36px;
+  font-family: var(--font-tg);
+  font-size: 0.88rem;
+  color: var(--tg-text);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.tg-search-input:focus {
+  background: #242426;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.tg-search-input::placeholder {
+  color: var(--tg-tertiary);
+}
+
+.tg-scan-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 0.5px solid rgba(255, 255, 255, 0.16);
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-family: var(--font-tg);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tg-scan-chip-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.tg-scan-chip-btn:active {
+  transform: scale(0.93);
+}
+
+/* Apple iOS Liquid Glass Header Pill Button */
+.ios-header-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-family: var(--font-tg);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.25, 1, 0.5, 1);
+  user-select: none;
+}
+.ios-header-pill:active {
+  transform: scale(0.93);
+  background: rgba(255, 255, 255, 0.2);
+}
+.ios-header-pill svg {
+  color: #ff9f0a;
+}
+.ios-header-pill .pill-badge {
+  background: var(--tg-blue);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* ==========================================================================
+   Scrollable Main Viewport
+   ========================================================================== */
+.tg-viewport {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 0 calc(90px + env(safe-area-inset-bottom, 0px));
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tg-viewport::-webkit-scrollbar {
+  width: 0px;
+  display: none;
+}
+
+.tab-pane {
+  display: none;
+  animation: tabFade 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+@keyframes tabFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   Telegram Inset Grouped Section System
+   ========================================================================== */
+.tg-section-header {
+  font-size: 0.73rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--tg-hint);
+  letter-spacing: 0.035em;
+  padding: 14px 16px 6px 16px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.tg-sub-link {
+  background: none;
+  border: none;
+  color: var(--tg-blue);
+  font-family: var(--font-tg);
+  font-size: 0.76rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.tg-sub-link:active {
+  opacity: 0.6;
+}
+
+.tg-section-footer {
+  font-size: 0.76rem;
+  color: var(--tg-hint);
+  line-height: 1.35;
+  padding: 6px 16px 16px 16px;
+  margin: 0;
+}
+
+/* Inset Group Card */
+.tg-inset-group {
+  background: var(--tg-card);
+  border-radius: 12px;
+  margin: 0 16px;
+  overflow: hidden;
+  border: 0.5px solid var(--tg-border);
+}
+
+/* Cells */
+.tg-cell {
+  min-height: 48px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  transition: background 0.15s ease;
+}
+
+.tg-cell.tg-cell-action {
+  cursor: pointer;
+}
+
+.tg-cell.tg-cell-action:active {
+  background: var(--tg-card-pressed);
+}
+
+/* Icon Box */
+.cell-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cell-icon-box.bg-blue   { background: var(--tg-blue); }
+.cell-icon-box.bg-purple { background: var(--tg-purple); }
+.cell-icon-box.bg-green  { background: var(--tg-green); }
+.cell-icon-box.bg-orange { background: var(--tg-orange); }
+.cell-icon-box.bg-red    { background: var(--tg-red); }
+.cell-icon-box.bg-slate  { background: var(--tg-slate); }
+
+.cell-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.cell-title {
+  font-size: 0.94rem;
+  color: var(--tg-text);
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.cell-title.text-blue  { color: var(--tg-blue); font-weight: 500; }
+.cell-title.text-green { color: var(--tg-green); font-weight: 500; }
+
+.cell-sub {
+  font-size: 0.74rem;
+  color: var(--tg-hint);
+  margin-top: 2px;
+}
+
+.cell-chevron {
+  font-size: 1.15rem;
+  color: var(--tg-hint);
+  opacity: 0.65;
+  font-weight: 400;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.cell-value-text {
+  font-size: 0.9rem;
+  color: var(--tg-hint);
+  flex-shrink: 0;
+}
+
+/* Inset Divider (starts after icon) */
+.tg-cell-divider {
+  height: 0.5px;
+  background: var(--tg-divider);
+  margin-left: 56px;
+}
+
+/* Inline Inputs */
+.cell-label-fixed {
+  width: 80px;
+  font-size: 0.9rem;
+  color: var(--tg-hint);
+  flex-shrink: 0;
+}
+
+.cell-inline-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-family: var(--font-tg);
+  font-size: 0.92rem;
+  color: var(--tg-text);
+  outline: none;
+  padding: 0;
+}
+
+.cell-inline-input::placeholder {
+  color: var(--tg-tertiary);
+}
+
+.cell-del-btn {
+  background: none;
+  border: none;
+  color: var(--tg-tertiary);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.cell-del-btn:hover, .cell-del-btn:active {
+  color: var(--tg-red);
+}
+
+/* Slider */
+.tg-cell-slider {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 12px 16px;
+}
+
+.slider-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.slider-label-row .cell-val {
+  font-size: 0.92rem;
+  color: var(--tg-blue);
+  font-weight: 600;
+}
+
+.tg-ios-slider {
+  width: 100%;
+  accent-color: var(--tg-blue);
+  cursor: pointer;
+}
+
+.tg-transparent-select {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--tg-text);
+  font-family: var(--font-tg);
+  font-size: 0.92rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.tg-transparent-select option {
+  background: #1c1c1e;
+  color: #ffffff;
+}
+
+/* Toggle Switch */
+.ios-switch {
+  width: 50px;
+  height: 30px;
+  border-radius: 30px;
+  background: #39393d;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+}
+
+.ios-switch.active {
+  background: var(--tg-green);
+}
+
+.switch-handle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ios-switch.active .switch-handle {
+  transform: translateX(20px);
+}
+
+/* ==========================================================================
+   Profile Card (Settings Tab)
+   ========================================================================== */
+.tg-profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22px 16px 20px;
+  text-align: center;
+}
+
+.tg-avatar-wrapper {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.tg-profile-avatar {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #007aff, #0056b3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.tg-avatar-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--tg-blue);
+  border: 2px solid #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tg-profile-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--tg-text);
+  letter-spacing: -0.02em;
+  margin-bottom: 3px;
+}
+
+.tg-profile-handle {
+  font-size: 0.86rem;
+  color: var(--tg-hint);
+  margin-bottom: 8px;
+}
+
+.tg-profile-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--tg-green);
+  background: rgba(48, 209, 88, 0.12);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 0.5px solid rgba(48, 209, 88, 0.25);
+}
+
+.status-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tg-green);
+  box-shadow: 0 0 8px var(--tg-green);
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.tg-full-action-btn {
+  width: 100%;
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  font-family: var(--font-tg);
+  font-size: 0.94rem;
+  font-weight: 600;
+  padding: 13px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s;
+}
+
+.tg-full-action-btn:active {
+  transform: scale(0.97);
+  background: #e4e4e7;
+}
+
+/* ==========================================================================
+   Apple iOS Native Button & Control System (Human Interface Guidelines)
+   ========================================================================== */
+.ios-btn,
+.liquid-glass-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-family: var(--font-tg);
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: #ffffff;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: rgba(120, 120, 128, 0.22);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  user-select: none;
+  line-height: 1;
+  transition: transform 0.16s cubic-bezier(0.25, 1, 0.5, 1), 
+              opacity 0.16s ease, 
+              background-color 0.16s ease,
+              box-shadow 0.16s ease;
+  white-space: nowrap;
+}
+
+.ios-btn:active,
+.liquid-glass-btn:active {
+  transform: scale(0.96);
+  opacity: 0.82;
+}
+
+/* iOS Primary Apple Blue */
+.ios-btn.primary,
+.ios-btn.accent,
+.liquid-glass-btn.accent {
+  background: #007aff;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.35);
+}
+.ios-btn.primary:hover,
+.ios-btn.accent:hover,
+.liquid-glass-btn.accent:hover {
+  background: #0a84ff;
+}
+
+/* iOS Secondary / Tinted Blue */
+.ios-btn.tinted {
+  background: rgba(0, 122, 255, 0.15);
+  color: #0a84ff;
+  border: 0.5px solid rgba(0, 122, 255, 0.25);
+}
+.ios-btn.tinted:hover {
+  background: rgba(0, 122, 255, 0.22);
+}
+.ios-btn.tinted.is-fav {
+  background: rgba(255, 214, 10, 0.18);
+  color: #ffd60a;
+  border-color: rgba(255, 214, 10, 0.35);
+}
+
+/* iOS Success Apple Green (Margin / Profit) */
+.ios-btn.success,
+.ios-btn.emerald,
+.liquid-glass-btn.emerald {
+  background: rgba(48, 209, 88, 0.16);
+  color: #30d158;
+  border: 0.5px solid rgba(48, 209, 88, 0.28);
+}
+.ios-btn.success:hover,
+.ios-btn.emerald:hover,
+.liquid-glass-btn.emerald:hover {
+  background: rgba(48, 209, 88, 0.25);
+}
+
+/* iOS Destructive Apple Red */
+.ios-btn.destructive,
+.ios-btn.danger,
+.liquid-glass-btn.danger {
+  background: rgba(255, 69, 58, 0.16);
+  color: #ff453a;
+  border: 0.5px solid rgba(255, 69, 58, 0.28);
+}
+.ios-btn.destructive:hover,
+.ios-btn.danger:hover,
+.liquid-glass-btn.danger:hover {
+  background: rgba(255, 69, 58, 0.25);
+}
+
+/* iOS Secondary Gray */
+.ios-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+}
+.ios-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Icon-only compact button */
+.ios-btn.icon-only {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* iOS Capsule Chips (Presets & Filters) */
+.ios-chip,
+.liquid-glass-pill {
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 999px;
+  font-family: var(--font-tg);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  background: rgba(120, 120, 128, 0.2);
+  color: #d1d1d6;
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  user-select: none;
+  white-space: nowrap;
+  transition: all 0.16s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.ios-chip:active,
+.liquid-glass-pill:active {
+  transform: scale(0.94);
+  opacity: 0.8;
+}
+
+.ios-chip:hover,
+.liquid-glass-pill:hover {
+  background: rgba(120, 120, 128, 0.28);
+  color: #ffffff;
+}
+
+.ios-chip.active,
+.liquid-glass-pill.active {
+  background: #ffffff;
+  color: #000000;
+  font-weight: 600;
+  border-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.ios-chip.step-btn {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(0, 122, 255, 0.16);
+  color: #0a84ff;
+  border: none;
+}
+.ios-chip.step-btn:hover {
+  background: rgba(0, 122, 255, 0.25);
+}
+
+/* ==========================================================================
+   Apple iOS Segmented Control (Sub-bar tabs)
+   ========================================================================== */
+.tg-segmented-wrap {
+  padding: 0 16px 10px;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 680;
+  flex-shrink: 0;
+}
+
+.tg-segmented-control {
+  position: relative;
+  display: flex;
+  background: rgba(118, 118, 128, 0.24);
+  border-radius: 9px;
+  padding: 2px;
+  user-select: none;
+}
+
+.segmented-indicator {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc(25% - 1px);
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 7px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.segmented-item {
+  flex: 1;
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  border: none;
+  padding: 6px 0;
+  font-family: var(--font-tg);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--tg-hint);
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.segmented-item:active {
+  opacity: 0.7;
+}
+
+.segmented-item.active {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Horizontal scroll strip for filters */
+.ios-filter-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.ios-filter-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.liquid-glass-card {
+  background: rgba(28, 28, 30, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+   Deals Feed & Cards with Liquid Glass Elements
+   ========================================================================== */
+.tg-deals-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.tg-deal-bubble {
+  background: var(--tg-card);
+  border-radius: 16px;
+  border: 0.5px solid var(--tg-border);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  animation: bubblePop 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes bubblePop {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ==========================================================================
+   Apple iOS Marketplace Offer Card (Предложение: фото, инфа, цена)
+   ========================================================================== */
+.tg-deal-bubble {
+  background: var(--tg-card);
+  border-radius: 16px;
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.tg-deal-bubble:active {
+  transform: scale(0.99);
+}
+
+/* Offer Photo Header */
+.bubble-photo-wrap {
+  width: 100%;
+  height: 180px;
+  position: relative;
+  background: #141416;
+  overflow: hidden;
+}
+
+.bubble-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bubble-photo-badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.ios-badge-city {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+}
+
+.ios-badge-discount {
+  background: #ff3b30;
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 4px 9px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(255, 59, 48, 0.4);
+}
+
+/* Offer Body (Info & Price) */
+.bubble-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bubble-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.bubble-subtitle {
+  font-size: 0.8rem;
+  color: var(--tg-hint);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Clean Price Row */
+.bubble-price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  border: 0.5px solid rgba(255, 255, 255, 0.05);
+}
+
+.price-main {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.025em;
+}
+
+.profit-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: #30d158;
+}
+
+.profit-chip span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  opacity: 0.8;
+}
+
+.profit-chip strong {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+/* Apple iOS Action Bar in Deals Card */
+.bubble-action-bar {
+  display: flex;
+  gap: 7px;
+  margin-top: 4px;
+  align-items: center;
+}
+
+.bubble-action-bar .ios-btn,
+.bubble-action-bar .liquid-glass-btn {
+  height: 35px;
+  font-size: 0.82rem;
+  border-radius: 9px;
+}
+
+/* Items List */
+.ios-item-card {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-price {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.item-title {
+  font-size: 0.88rem;
+  color: var(--tg-hint);
+  line-height: 1.3;
+}
+
+.item-link {
+  font-size: 0.78rem;
+  color: var(--tg-blue);
+  text-decoration: none;
+  font-weight: 500;
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.item-link:active {
+  opacity: 0.6;
+}
+
+/* Terminal Console Card */
+.tg-terminal-card {
+  background: #141416;
+  border-radius: 14px;
+  border: 0.5px solid var(--tg-border);
+  margin: 0 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 0.5px solid var(--tg-divider);
+}
+
+.terminal-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.terminal-dot.red    { background: #ff5f56; }
+.terminal-dot.yellow { background: #ffbd2e; }
+.terminal-dot.green  { background: #27c93f; }
+
+.terminal-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--tg-hint);
+  margin-left: 6px;
+}
+
+.tg-terminal-code {
+  padding: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  color: #a1a1aa;
+  max-height: 480px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Empty State */
+.tg-empty-feed {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--tg-hint);
+}
+
+.tg-empty-feed svg {
+  color: var(--tg-tertiary);
+  margin-bottom: 12px;
+}
+
+.tg-empty-feed h4 {
+  color: #ffffff;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.tg-empty-feed p {
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   APPLE iOS LIQUID GLASS FLOATING DOCK / TABBAR
+   ========================================================================== */
+.tg-tabbar {
+  position: fixed;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  max-width: 520px;
+  height: 62px;
+  background: rgba(22, 26, 36, 0.75);
+  backdrop-filter: blur(32px) saturate(210%);
+  -webkit-backdrop-filter: blur(32px) saturate(210%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 32px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.52), 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 6px;
+  z-index: 900;
+  user-select: none;
+}
+
+/* Apple Liquid Glass Sliding Pill Indicator */
+.tg-tabbar-indicator {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: calc(20% - 2.4px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 0.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 26px;
+  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.38);
+  transition: transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tg-tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #8e8e93;
+  font-family: var(--font-tg);
+  padding: 5px 0;
+  position: relative;
+  z-index: 2;
+  transition: color 0.2s ease;
+}
+
+.tg-tab-item:active .tab-icon-wrap {
+  transform: scale(0.84);
+  transition: transform 0.08s ease;
+}
+
+.tab-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tab-icon-svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2;
+  transition: stroke 0.2s ease, stroke-width 0.2s ease, transform 0.2s ease;
+}
+
+.tab-label {
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease, font-weight 0.2s ease;
+}
+
+/* Active State with Telegram Spring Bounce & Apple Glow */
+.tg-tab-item.active {
+  color: #0a84ff;
+}
+
+.tg-tab-item.active .tab-icon-wrap {
+  animation: tgTabBounce 0.42s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.tg-tab-item.active .tab-icon-svg {
+  stroke: #0a84ff;
+  stroke-width: 2.3;
+  filter: drop-shadow(0 2px 8px rgba(10, 132, 255, 0.45));
+}
+
+.tg-tab-item.active .tab-label {
+  font-weight: 600;
+  color: #0a84ff;
+}
+
+@keyframes tgTabBounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(0.72); }
+  60% { transform: scale(1.22); }
+  80% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.tab-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  background: var(--tg-red);
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 8px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  line-height: 1;
+}
+
+/* ==========================================================================
+   iOS Bottom Sheet Modal
+   ========================================================================== */
+.ios-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 3000;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.ios-sheet-overlay.open {
+  display: flex;
+}
+
+.ios-sheet-card {
+  width: 100%;
+  max-width: 640px;
+  background: #1c1c1e;
+  border-radius: 24px 24px 0 0;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.16);
+  padding: 10px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+  animation: sheetSlide 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sheetSlide {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.sheet-grabber {
+  width: 36px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 3px;
+  margin: 0 auto 14px;
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.sheet-header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.sheet-close-btn {
+  background: none;
+  border: none;
+  color: var(--tg-hint);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.preset-scroll-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.preset-scroll-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.preset-pill {
+  background: #2c2c2e;
+  color: #ffffff;
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-family: var(--font-tg);
+  font-size: 0.74rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.preset-pill:hover, .preset-pill:active {
+  background: #ffffff;
+  color: #000000;
+}
+
+/* ==========================================================================
+   Toast Notification
+   ========================================================================== */
+.ios-dynamic-toast {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(28, 28, 30, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  border: 0.5px solid rgba(255, 255, 255, 0.16);
+  display: none;
+  align-items: center;
+  gap: 8px;
+  z-index: 4000;
+  animation: toastPop 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes toastPop {
+  from { opacity: 0; transform: translate(-50%, -10px) scale(0.95); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+.toast-icon {
+  color: var(--tg-green);
+  display: flex;
+  align-items: center;
+}
+
+/* ==========================================================================
+   Calculator Styles (Перекуп-калькулятор маржи)
+   ========================================================================== */
+.calc-card {
+  background: var(--tg-card);
+  border-radius: 16px;
+  border: 0.5px solid var(--tg-border);
+  padding: 16px;
+  margin: 0 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.calc-display {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(20, 20, 22, 0.9) 100%);
+  border: 1px solid rgba(48, 209, 88, 0.25);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.calc-profit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.calc-profit-label {
+  font-size: 0.82rem;
+  color: var(--tg-hint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calc-profit-val {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #30d158;
+  letter-spacing: -0.02em;
+}
+
+.calc-metrics-row {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.08);
+}
+
+.calc-metric-chip {
+  font-size: 0.78rem;
+  color: var(--tg-hint);
+}
+
+.calc-metric-chip strong {
+  color: #ffffff;
+}
+
+.calc-inputs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.calc-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calc-input-label {
+  font-size: 0.76rem;
+  color: var(--tg-hint);
+  font-weight: 500;
+}
+
+.calc-field {
+  width: 100%;
+  background: #141416;
+  border: 1px solid var(--tg-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  font-family: var(--font-tg);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.calc-field:focus {
+  border-color: var(--tg-blue);
+}
+
+.calc-presets-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.calc-presets-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* ==========================================================================
+   Favorites Specific Styles
+   ========================================================================== */
+.fav-status-select {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  outline: none;
+  font-family: var(--font-tg);
+}
+
+.fav-note-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fav-note-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-family: var(--font-tg);
+  outline: none;
+}
+
+.fav-note-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ==========================================================================
+   Blacklist List Items
+   ========================================================================== */
+.blacklist-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+}
+
+.blacklist-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.blacklist-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.blacklist-reason {
+  font-size: 0.74rem;
+  color: var(--tg-hint);
+}
+

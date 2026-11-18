@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <title>Семейное Меню & Цены — Liquid Glass</title>
+  <meta name="theme-color" content="#000000">
+
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Liquid Glass Kit Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233a8bf7'><circle cx='12' cy='12' r='10'/></svg>">
+</head>
+<body>
+
+  <!-- Ambient background glow from liquid-glass-kit -->
+  <div class="bg" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <!-- ============================================== -->
+  <!-- VIEW 0: МЕНЮ (План питания на неделю)          -->
+  <!-- ============================================== -->
+  <section class="view on" id="v0">
+    <div class="sscroll">
+      <div class="stop">
+        <div>
+          <h2>План питания</h2>
+          <div class="sub" id="headerFamilySub">Семья 2 чел. • 7 дней</div>
+        </div>
+        <div class="sav" id="profileAvatar">🍽</div>
+      </div>
+
+      <!-- Days of Week Chips -->
+      <div class="day-scroll" id="dayScroll">
+        <button type="button" class="dchip active" data-day="0">Пн</button>
+        <button type="button" class="dchip" data-day="1">Вт</button>
+        <button type="button" class="dchip" data-day="2">Ср</button>
+        <button type="button" class="dchip" data-day="3">Чт</button>
+        <button type="button" class="dchip" data-day="4">Пт</button>
+        <button type="button" class="dchip" data-day="5">Сб</button>
+        <button type="button" class="dchip" data-day="6">Вс</button>
+      </div>
+
+      <!-- Day Nutrition Overview Card -->
+      <div class="scard" style="background: linear-gradient(145deg, #1d2333 0%, #1c1c1e 100%); border-color: rgba(58,139,247,.3);">
+        <div class="schd">
+          <span id="dayTitleText">ПОНЕДЕЛЬНИК</span>
+          <span class="schd-badge" id="dayCaloriesText">1 380 ккал</span>
+        </div>
+        <div class="scb" style="display:flex; justify-content:space-around; text-align:center;">
+          <div>
+            <div style="font-size:12px; color:#8e8e93; font-weight:600;">БЕЛКИ</div>
+            <div style="font-size:18px; font-weight:800; color:#fff;" id="dayProteinsText">96г</div>
+          </div>
+          <div>
+            <div style="font-size:12px; color:#8e8e93; font-weight:600;">ЖИРЫ</div>
+            <div style="font-size:18px; font-weight:800; color:#fff;" id="dayFatsText">48г</div>
+          </div>
+          <div>
+            <div style="font-size:12px; color:#8e8e93; font-weight:600;">УГЛЕВОДЫ</div>
+            <div style="font-size:18px; font-weight:800; color:#fff;" id="dayCarbsText">142г</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meals Card -->
+      <div class="scard">
+        <div class="schd">
+          <span>БЛЮДА ДНЯ</span>
+          <span class="schd-badge green">Сбалансировано</span>
+        </div>
+        <div class="scb" id="mealsContainer">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <button type="button" class="action-glass-btn" id="btnRegenerateMenu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        <span>Подобрать другие блюда на неделю</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- VIEW 1: ЦЕНЫ (Сравнение супермаркетов)         -->
+  <!-- ============================================== -->
+  <section class="view" id="v1">
+    <div class="sscroll">
+      <div class="stop">
+        <div>
+          <h2>Сравнение цен</h2>
+          <div class="sub">Полная корзина на неделю</div>
+        </div>
+        <div class="sav" style="background: linear-gradient(135deg, #ff9500, #ff3b30);">🛒</div>
+      </div>
+
+      <!-- Supermarket Battle Grid -->
+      <div class="battle-grid" id="battleGrid">
+        <div class="store-box" id="boxPyaterochka">
+          <div class="store-name" style="color: #ff3b30;">Пятерочка</div>
+          <div class="store-price" id="pricePya">4 480 ₽</div>
+          <div class="store-diff more" id="diffPya">+230 ₽</div>
+        </div>
+        <div class="store-box winner" id="boxMagnit">
+          <div class="store-winner-badge">ВЫГОДА 🏆</div>
+          <div class="store-name" style="color: #ff2d55;">Магнит</div>
+          <div class="store-price" id="priceMag">4 250 ₽</div>
+          <div class="store-diff" id="diffMag">Лучшая цена</div>
+        </div>
+        <div class="store-box" id="boxLenta">
+          <div class="store-name" style="color: #3a8bf7;">Лента</div>
+          <div class="store-price" id="priceLen">4 680 ₽</div>
+          <div class="store-diff more" id="diffLen">+430 ₽</div>
+        </div>
+      </div>
+
+      <!-- Smart Hybrid Split Card -->
+      <div class="scard" style="background: linear-gradient(135deg, rgba(58,139,247,.15) 0%, rgba(52,199,89,.15) 100%); border-color: rgba(58,139,247,.35);">
+        <div class="schd">
+          <span>ЛАЙФХАК ЭКОНОМИИ</span>
+          <span class="schd-badge green">Умный сплит</span>
+        </div>
+        <div class="scb" id="hybridTipText" style="font-size: 14px; line-height: 1.45; color: #e5e5ea;">
+          💡 Покупая мясо и яйца в Магните, а рыбу и свежие овощи в Ленте, ваша корзина обойдется всего в <strong>3 980 ₽</strong> (экономия еще 270 ₽)!
+        </div>
+      </div>
+
+      <!-- Breakdown by items -->
+      <div class="scard">
+        <div class="schd">
+          <span>ДЕТАЛИЗАЦИЯ ПО ТОВАРАМ</span>
+          <span class="schd-badge" id="itemsCountBadge">18 поз.</span>
+        </div>
+        <div class="scb" id="priceItemsList" style="padding-top: 6px; padding-bottom: 6px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- VIEW 2: ПРОФИЛЬ (Анкета семьи & Сервер)         -->
+  <!-- ============================================== -->
+  <section class="view" id="v2">
+    <div class="sscroll">
+      <div class="stop">
+        <div>
+          <h2>Настройки семьи</h2>
+          <div class="sub">Вкусы, аллергии и размер семьи</div>
+        </div>
+        <div class="sav" style="background: linear-gradient(135deg, #af52de, #3a8bf7);">⚙️</div>
+      </div>
+
+      <!-- Family Size & Period Card -->
+      <div class="scard">
+        <div class="schd"><span>СЕМЬЯ И ПЕРИОД</span></div>
+        <div class="scb">
+          <div class="stepper-wrap">
+            <div>
+              <div style="font-size:16px; font-weight:700;">Размер семьи</div>
+              <div style="font-size:13px; color:#8e8e93;">Расчет точных граммовок порций</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <button class="step-btn" id="btnMinusFamily" type="button">−</button>
+              <span class="step-val" id="familySizeVal">2</span>
+              <button class="step-btn" id="btnPlusFamily" type="button">+</button>
+            </div>
+          </div>
+          <div style="margin-top:14px; padding-top:14px; border-top:0.5px solid rgba(255,255,255,.08); display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:14px; font-weight:600; color:#8e8e93;">ПЕРИОД МЕНЮ</div>
+            <div style="display:flex; gap:6px;" id="periodChips">
+              <span class="tg" data-days="3">3 дня</span>
+              <span class="tg" data-days="5">5 дней</span>
+              <span class="tg selected" data-days="7" style="--c:#3a8bf7;">7 дней ⭐️</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Favorites Card -->
+      <div class="scard">
+        <div class="schd"><span>ЛЮБИМЫЕ ПРОДУКТЫ (АКЦЕНТ)</span></div>
+        <div class="scb">
+          <div class="tags" id="favTagsWrap">
+            <span class="tg fav-tag selected" data-val="курица">🍗 Курица</span>
+            <span class="tg fav-tag selected" data-val="рыба">🐟 Рыба / Лосось</span>
+            <span class="tg fav-tag selected" data-val="авокадо">🥑 Авокадо</span>
+            <span class="tg fav-tag" data-val="говядина">🥩 Говядина</span>
+            <span class="tg fav-tag" data-val="паста">🍝 Паста</span>
+            <span class="tg fav-tag" data-val="творог">🧀 Творог</span>
+            <span class="tg fav-tag" data-val="рис">🍚 Рис</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stop List Card -->
+      <div class="scard">
+        <div class="schd"><span>СТОП-ЛИСТ (НЕ ВКЛЮЧАТЬ В БЛЮДА)</span></div>
+        <div class="scb">
+          <div class="tags" id="stopTagsWrap">
+            <span class="tg stop-tag selected" data-val="лук">🧅 Лук</span>
+            <span class="tg stop-tag" data-val="грибы">🍄 Грибы</span>
+            <span class="tg stop-tag" data-val="кинза">🫑 Кинза</span>
+            <span class="tg stop-tag" data-val="свинина">🐷 Свинина</span>
+            <span class="tg stop-tag" data-val="кабачки">🥒 Кабачки</span>
+            <span class="tg stop-tag" data-val="печень">🫀 Субпродукты</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Allergies Card -->
+      <div class="scard">
+        <div class="schd"><span>АЛЛЕРГИИ И ОГРАНИЧЕНИЯ</span></div>
+        <div class="scb">
+          <div class="tags" id="allgTagsWrap">
+            <span class="tg allg-tag" data-val="глютен">🌾 Без глютена</span>
+            <span class="tg allg-tag" data-val="лактоза">🥛 Без лактозы</span>
+            <span class="tg allg-tag" data-val="орехи">🥜 Без орехов</span>
+            <span class="tg allg-tag" data-val="яйца">🥚 Без яиц</span>
+            <span class="tg allg-tag" data-val="морепродукты">🦐 Без морепродуктов</span>
+            <span class="tg allg-tag" data-val="мясо">🌱 Вегетарианство</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Profile Button -->
+      <button type="button" class="action-glass-btn" id="btnSaveProfile">
+        <span>Сохранить профиль семьи</span>
+      </button>
+
+      <!-- Health Check & Server Monitoring Card -->
+      <div class="scard" style="margin-top:20px;">
+        <div class="schd">
+          <span>HEALTH CHECK & СЕРВЕР</span>
+          <span class="schd-badge green">200 OK</span>
+        </div>
+        <div class="scb" style="font-size:14px; line-height:1.6; color:#a8a8ae;">
+          <div>• <strong>Методы мониторинга:</strong> Поддерживает GET и легкий HEAD для UptimeRobot без пробуждения тяжелой логики.</div>
+          <div>• <strong>Автообновление:</strong> Каждый понедельник в 09:00 через APScheduler.</div>
+          <div>• <strong>Торговые сети:</strong> Пятерочка, Магнит, Лента.</div>
+          <button type="button" class="action-glass-btn" id="btnTestHealthPing" style="margin-top:14px; background: rgba(255,255,255,0.08); box-shadow:none; border:1px solid rgba(255,255,255,0.15);">
+            <span>⚡️ Проверить HEAD /health (Ping)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================== -->
+  <!-- LIQUID GLASS FLOATING DOCK & TAB BAR           -->
+  <!-- ============================================== -->
+  <div class="dock">
+    <!-- Liquid Glass Tab Bar (843×190u, droplet with spring physics) -->
+    <div class="bar" id="bar" style="--x:0;--tx:0;--sx:1;--sy:1;--p:0">
+      <div class="matte base" id="base"></div>
+      <div class="fil" id="fil"></div>
+      <div class="solid"></div>
+
+      <!-- 3 Navigation Tabs -->
+      <div class="tabs" id="tabs">
+        <button class="tab on" aria-label="Меню">
+          <span class="ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+              <line x1="6" y1="1" x2="6" y2="4"/>
+              <line x1="10" y1="1" x2="10" y2="4"/>
+              <line x1="14" y1="1" x2="14" y2="4"/>
+            </svg>
+          </span>
+          <span>Меню</span>
+        </button>
+
+        <button class="tab" aria-label="Цены">
+          <span class="ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="9" cy="21" r="1.5"/>
+              <circle cx="20" cy="21" r="1.5"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+          </span>
+          <span>Цены</span>
+        </button>
+
+        <button class="tab" aria-label="Профиль">
+          <span class="ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="7" r="4"/>
+              <path d="M5.5 21c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/>
+            </svg>
+          </span>
+          <span>Профиль</span>
+        </button>
+      </div>
+
+      <!-- Glass Droplet Thumb & Lens with cloned tabs -->
+      <div class="glass thumb" id="thumb"><div class="lens" id="lens"></div></div>
+    </div>
+
+    <!-- Liquid Glass Circle Action Button (Refresh / Health Ping) -->
+    <div class="matte circle" id="circle" role="button" tabindex="0" aria-label="Обновить меню">
+      <span class="ics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+      </span>
+      <div class="glass sthumb"><div class="lens" id="slens"></div></div>
+    </div>
+  </div>
+
+  <!-- Eggpop Toast Notification from liquid-glass-kit -->
+  <div class="eggpop" id="eggpop">Успешно</div>
+
+  <!-- SVG Filter Defs injected dynamically -->
+  <svg width="0" height="0" style="position:absolute" color-interpolation-filters="sRGB"><defs id="defs"></defs></svg>
+
+  <!-- JavaScript -->
+  <script src="js/app.js"></script>
+</body>
+</html>

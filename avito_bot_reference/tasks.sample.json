@@ -1,0 +1,22 @@
+[
+  {
+    "id": "12promax_nsk",
+    "model": "iPhone 12 Pro Max",
+    "city": "Новосибирск",
+    "title": "iPhone 12 Pro Max (Новосибирск)",
+    "url": "https://m.avito.ru/novosibirsk/telefony/mobilnye_telefony/apple/iphone_12_pro_max-ASgBAgICAkSByA2kmzm0wA30qzmwwQ2K_Dc?s=104",
+    "min_price": 35000,
+    "max_price": 75000,
+    "avg_price": 46000
+  },
+  {
+    "id": "11_kem",
+    "model": "iPhone 11",
+    "city": "Кемерово",
+    "title": "iPhone 11 (Кемерово)",
+    "url": "https://m.avito.ru/kemerovo/telefony/mobilnye_telefony/apple/iphone_11-ASgBAgICAkSByA2kmzm0wA30qzmwwQ2E_Dc?s=104",
+    "min_price": 11000,
+    "max_price": 25000,
+    "avg_price": 16000
+  }
+]

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Avito Radar Pro — Telegram Mini App</title>
+  
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'><circle cx='12' cy='12' r='10'/></svg>">
+</head>
+<body class="tg-webapp">
+
+  <!-- Main Telegram Mini App Container -->
+  <div class="tg-app-container">
+
+    <!-- Telegram Top Navigation Header -->
+    <header class="tg-navbar">
+      <div class="navbar-left">
+        <button class="nav-text-btn" id="btnNavEdit" type="button">Править</button>
+      </div>
+
+      <div class="navbar-title-wrap">
+        <div class="navbar-title-row">
+          <span class="navbar-title" id="pageTitle">Сделки</span>
+          <span class="tg-verified-badge" title="Подтвержденный бот">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#007aff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          </span>
+        </div>
+        <span class="navbar-sub" id="botStatusSub">бот • в сети</span>
+      </div>
+
+      <div class="navbar-right">
+        <!-- iOS Glass Pill to Open Favorites (Moved to header as requested) -->
+        <button class="ios-header-pill" id="btnHeaderFavs" type="button" title="Открыть Избранное">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <span>Избранное</span>
+          <span class="pill-badge" id="headerFavBadge">0</span>
+        </button>
+
+        <!-- Master Bot Action Button (Circle Play/Stop) -->
+        <button class="tg-circle-action-btn" id="btnToggleWorker" type="button" title="Старт / Пауза">
+          <svg id="workerIconSvg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Telegram Search & Action Subheader -->
+    <div class="tg-search-subheader" id="searchSubHeader">
+      <div class="tg-search-box">
+        <svg class="search-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="dealSearchInput" class="tg-search-input" placeholder="Поиск по объявлениям и ценам">
+      </div>
+      <!-- iOS Quick Scan Action Button -->
+      <button class="ios-btn primary" id="btnRunOnce" type="button" title="Запустить немедленный парсинг">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <span>Скан</span>
+      </button>
+    </div>
+
+    <!-- Apple iOS Segmented Sub-Bar (Ads | Deals | Favorites | Tasks) -->
+    <div class="tg-segmented-wrap" id="segmentedSubHeader">
+      <div class="tg-segmented-control" id="subviewSegmented">
+        <div class="segmented-indicator" id="segmentedIndicator"></div>
+        <button type="button" class="segmented-item sub-view-pill active" data-subview="ads">Объявления</button>
+        <button type="button" class="segmented-item sub-view-pill" data-subview="deals">Сделки</button>
+        <button type="button" class="segmented-item sub-view-pill" data-subview="favorites">Избранное</button>
+        <button type="button" class="segmented-item sub-view-pill" data-subview="tasks">Задачи</button>
+      </div>
+    </div>
+
+    <!-- Main Scrollable Content Viewport -->
+    <main class="tg-viewport" id="tgViewport">
+
+      <!-- ============================================== -->
+      <!-- TAB 1: ALL ADS (Свежие объявления с Авито)     -->
+      <!-- ============================================== -->
+      <section class="tab-pane active" id="pane-ads">
+        <div class="tg-section-header">
+          <span>НОВЫЕ ОБЪЯВЛЕНИЯ</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span id="adsCountHeader" style="font-size: 0.72rem; color: var(--tg-hint);">0 шт.</span>
+            <button class="tg-sub-link" id="btnClearAds" type="button">Очистить</button>
+          </div>
+        </div>
+
+        <!-- Quick Filter Strip (iOS Chips) -->
+        <div class="ios-filter-scroll" id="adsFilterBar">
+          <button type="button" class="ios-chip active" data-filter="all">Все модели</button>
+          <button type="button" class="ios-chip" data-filter="profit">🔥 С выгодой</button>
+          <button type="button" class="ios-chip" data-filter="ip13">iPhone 13</button>
+          <button type="button" class="ios-chip" data-filter="ip14">iPhone 14</button>
+          <button type="button" class="ios-chip" data-filter="ip12">iPhone 12</button>
+          <button type="button" class="ios-chip" data-filter="ip11">iPhone 11</button>
+        </div>
+
+        <div class="tg-deals-feed" id="adsContainer">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TAB 2: DEALS (Горячие скидки ниже рынка)       -->
+      <!-- ============================================== -->
+      <section class="tab-pane" id="pane-deals">
+        <div class="tg-section-header">
+          <span>ГОРЯЧИЕ СКИДКИ</span>
+          <button class="tg-sub-link" id="btnClearDeals" type="button">Очистить</button>
+        </div>
+
+        <!-- Quick Filter Strip (iOS Chips) -->
+        <div class="ios-filter-scroll" id="dealsFilterBar">
+          <button type="button" class="ios-chip active" data-filter="all">Все модели</button>
+          <button type="button" class="ios-chip" data-filter="profit10k">🔥 Выгода ≥10 000 ₽</button>
+          <button type="button" class="ios-chip" data-filter="ip13">iPhone 13</button>
+          <button type="button" class="ios-chip" data-filter="ip14">iPhone 14</button>
+          <button type="button" class="ios-chip" data-filter="ip15">iPhone 15</button>
+        </div>
+
+        <div class="tg-deals-feed" id="dealsContainer">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TAB 3: FAVORITES (Избранное перекупа)          -->
+      <!-- ============================================== -->
+      <section class="tab-pane" id="pane-favorites">
+        <div class="tg-section-header">
+          <span>ИЗБРАННЫЕ ОБЪЯВЛЕНИЯ</span>
+          <span id="favCountHeader" style="font-size: 0.72rem; color: var(--tg-hint);">0 шт.</span>
+        </div>
+
+        <div class="tg-deals-feed" id="favoritesContainer">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TAB 3: PROFIT CALCULATOR (Калькулятор маржи)   -->
+      <!-- ============================================== -->
+      <section class="tab-pane" id="pane-calculator">
+        <div class="tg-section-header">
+          <span>ПЕРЕКУП-КАЛЬКУЛЯТОР МАРЖИ</span>
+        </div>
+
+        <div class="calc-card">
+          <!-- Live Display -->
+          <div class="calc-display">
+            <div class="calc-profit-row">
+              <span class="calc-profit-label">Чистый профит:</span>
+              <span class="calc-profit-val" id="calcNetProfit">+0 ₽</span>
+            </div>
+            <div class="calc-metrics-row">
+              <span class="calc-metric-chip">Маржа: <strong id="calcMarginPct">0%</strong></span>
+              <span class="calc-metric-chip">ROI (Окупаемость): <strong id="calcRoiPct">0%</strong></span>
+              <span class="calc-metric-chip">Себестоимость: <strong id="calcTotalCost">0 ₽</strong></span>
+            </div>
+          </div>
+
+          <!-- Interactive Inputs with Quick Steppers -->
+          <div class="calc-inputs-grid">
+            <div class="calc-input-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <label class="calc-input-label" style="margin:0;">1. Цена закупки на Авито (₽):</label>
+                <div style="display:flex; gap:5px;">
+                  <button type="button" class="ios-chip step-btn" data-target="calcBuyPrice" data-step="-1000">-1k</button>
+                  <button type="button" class="ios-chip step-btn" data-target="calcBuyPrice" data-step="1000">+1k</button>
+                </div>
+              </div>
+              <input type="number" id="calcBuyPrice" class="calc-field" placeholder="30000" value="30000">
+            </div>
+
+            <div class="calc-input-group">
+              <label class="calc-input-label">2. Дополнительные расходы (₽):</label>
+              <input type="number" id="calcExpenses" class="calc-field" placeholder="0" value="0">
+              
+              <!-- Quick Expense Presets in iOS Chips -->
+              <div class="calc-presets-row">
+                <button type="button" class="ios-chip calc-exp-btn" data-add="2000">+2k АКБ</button>
+                <button type="button" class="ios-chip calc-exp-btn" data-add="3500">+3.5k Экран</button>
+                <button type="button" class="ios-chip calc-exp-btn" data-add="500">+500 ₽ Полир.</button>
+                <button type="button" class="ios-chip calc-exp-btn" data-add="1000">+1k Доставка</button>
+                <button type="button" class="ios-chip calc-exp-btn reset" data-reset="true" style="color: #ff453a;">Сброс</button>
+              </div>
+            </div>
+
+            <div class="calc-input-group">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <label class="calc-input-label" style="margin:0;">3. Ожидаемая цена перепродажи (₽):</label>
+                <div style="display:flex; gap:5px;">
+                  <button type="button" class="ios-chip step-btn" data-target="calcSellPrice" data-step="-1000">-1k</button>
+                  <button type="button" class="ios-chip step-btn" data-target="calcSellPrice" data-step="1000">+1k</button>
+                </div>
+              </div>
+              <input type="number" id="calcSellPrice" class="calc-field" placeholder="38000" value="38000">
+            </div>
+
+            <button type="button" class="ios-btn primary" id="btnSaveCalcToFav" style="width: 100%; height: 42px; margin-top: 6px;">
+              <span>⭐ Добавить этот лот в Избранное</span>
+            </button>
+          </div>
+        </div>
+
+        <p class="tg-section-footer">Вводите затраты на восстановление и полировку, чтобы сразу видеть чистую окупаемость лота перед звонком продавцу.</p>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TAB 4: TASKS (Telegram Inset Grouped Settings) -->
+      <!-- ============================================== -->
+      <section class="tab-pane" id="pane-tasks">
+        <div class="tg-section-header">
+          <span>УПРАВЛЕНИЕ ПОИСКОМ</span>
+        </div>
+
+        <div class="tg-inset-group">
+          <div class="tg-cell tg-cell-action" id="btnOpenAddTaskModal" role="button" tabindex="0">
+            <div class="cell-icon-box bg-blue">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <div class="cell-content">
+              <span class="cell-title text-blue">Добавить модель для поиска</span>
+            </div>
+            <span class="cell-chevron">›</span>
+          </div>
+        </div>
+
+        <div class="tg-section-header" style="margin-top: 18px;">
+          <span>АКТИВНЫЕ ЗАДАЧИ</span>
+        </div>
+
+        <div class="tg-inset-group" id="tasksContainer">
+          <!-- Tasks rendered via JS -->
+        </div>
+        
+        <p class="tg-section-footer">Бот непрерывно опрашивает каталог Авито по указанным городам и отбирает варианты с максимальной выгодой.</p>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TAB 5: ITEMS CATALOG                           -->
+      <!-- ============================================== -->
+      <section class="tab-pane" id="pane-items">
+        <div class="tg-section-header">
+          <span>ФИЛЬТР ПО ЗАДАЧЕ</span>
+        </div>
+
+        <div class="tg-inset-group" style="margin-bottom: 14px;">
+          <div class="tg-cell">
+            <div class="cell-icon-box bg-purple">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                <polyline points="2 17 12 22 22 17"/>
+                <polyline points="2 12 12 17 22 12"/>
+              </svg>
+            </div>
+            <div class="cell-content">
+              <select id="itemsTaskFilter" class="tg-transparent-select">
+                <option value="all">Все задачи поиска</option>
+              </select>
+            </div>
+            <span class="cell-chevron">›</span>
+          </div>
+        </div>
+
+        <div class="tg-section-header">
+          <span>ВЫГРУЖЕННЫЕ ОБЪЯВЛЕНИЯ</span>
+        </div>
+
+        <div class="tg-inset-group" id="itemsListContainer">
+          <!-- Items rendered via JS -->
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TAB 6: LIVE LOGS (Telegram Console Card)       -->
+      <!-- ============================================== -->
+      <section class="tab-pane" id="pane-logs">
+        <div class="tg-section-header">
+          <span>КОНСОЛЬ ПАРСЕРА</span>
+          <button class="tg-sub-link" id="btnRefreshLogs" type="button">Обновить</button>
+        </div>
+
+        <div class="tg-terminal-card">
+          <div class="terminal-bar">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">worker.py • live log</span>
+          </div>
+          <pre class="tg-terminal-code" id="logsTerminalContent">Загрузка логов...</pre>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TAB 7: TELEGRAM SETTINGS & ANTI-SCAM           -->
+      <!-- ============================================== -->
+      <section class="tab-pane" id="pane-settings">
+        
+        <!-- Telegram Profile Header Card -->
+        <div class="tg-profile-card">
+          <div class="tg-avatar-wrapper">
+            <div class="tg-profile-avatar">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8">
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+                <path d="M12 6a6 6 0 1 0 6 6 6 6 0 0 0-6-6zm0 10a4 4 0 1 1 4-4 4 4 0 0 1-4 4z"/>
+              </svg>
+            </div>
+            <div class="tg-avatar-badge">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="#ffffff"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+            </div>
+          </div>
+          <h2 class="tg-profile-name">Avito Radar Pro</h2>
+          <div class="tg-profile-handle">@AvitoDealTrackerBot</div>
+          <div class="tg-profile-status" id="profileStatusText">
+            <span class="status-pulse-dot"></span> бот активен • в сети
+          </div>
+        </div>
+
+        <!-- Telegram Notifications Settings Group -->
+        <div class="tg-section-header">
+          <span>УВЕДОМЛЕНИЯ В TELEGRAM</span>
+        </div>
+        <div class="tg-inset-group">
+          <div class="tg-cell">
+            <div class="cell-icon-box bg-blue">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+            </div>
+            <div class="cell-content">
+              <span class="cell-title">Chat ID</span>
+            </div>
+            <input type="text" id="settingChatId" class="cell-value-input" placeholder="374188835" value="374188835">
+          </div>
+          <div class="tg-cell-divider"></div>
+          <div class="tg-cell">
+            <div class="cell-icon-box bg-purple">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <div class="cell-content">
+              <span class="cell-title">Topic ID (Супергруппы)</span>
+            </div>
+            <input type="text" id="settingThreadId" class="cell-value-input" placeholder="Не задан (основной чат)">
+          </div>
+          <div class="tg-cell-divider"></div>
+          <div class="tg-cell">
+            <div class="cell-icon-box bg-slate">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <div class="cell-content">
+              <span class="cell-title">Bot Token</span>
+            </div>
+            <input type="password" id="settingBotToken" class="cell-value-input" placeholder="8593240850:AAG...">
+          </div>
+        </div>
+
+        <!-- Smart Inspection & Anti-Scam Filters -->
+        <div class="tg-section-header" style="margin-top: 18px;">
+          <span>УМНЫЙ АНТИ-СКАМ И ФИЛЬТРЫ</span>
+        </div>
+        <div class="tg-inset-group">
+          <div class="tg-cell">
+            <div class="cell-icon-box bg-green">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </div>
+            <div class="cell-content">
+              <span class="cell-title">Фотографии в Telegram</span>
+              <span class="cell-sub">Присылать карточку с фото товара</span>
+            </div>
+            <div class="ios-switch active" id="switchSendPhotos">
+              <div class="switch-handle"></div>
+            </div>
+          </div>
+          <div class="tg-cell-divider"></div>
+          <div class="tg-cell">
+            <div class="cell-icon-box bg-orange">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <div class="cell-content">
+              <span class="cell-title">Фильтр критических дефектов</span>
+              <span class="cell-sub">Исключать iCloud, Face ID, битые экраны</span>
+            </div>
+            <div class="ios-switch active" id="switchFilterDefects">
+              <div class="switch-handle"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Proxy Pool Section -->
+        <div class="tg-section-header" style="margin-top: 18px;">
+          <span>ПУЛ ПРОКСИ (РОТАЦИЯ IP)</span>
+        </div>
+        <div class="tg-inset-group">
+          <div style="padding: 12px 16px;">
+            <p style="font-size: 0.76rem; color: var(--tg-hint); margin-bottom: 8px;">Каждый прокси с новой строки (HTTP или SOCKS5):</p>
+            <textarea id="proxiesTextarea" class="calc-field" style="height: 70px; resize: none; font-size: 0.8rem; font-family: var(--font-mono);" placeholder="http://login:password@ip:port&#10;socks5://ip:port"></textarea>
+            <div style="margin-top: 8px; display: flex; justify-content: flex-end;">
+              <button type="button" class="ios-btn primary" id="btnSaveProxies" style="height: 32px; padding: 0 14px;">Сохранить прокси</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blacklist Section -->
+        <div class="tg-section-header" style="margin-top: 18px;">
+          <span>ЧЁРНЫЙ СПИСОК (ЗАБЛОКИРОВАННЫЕ ПРОДАВЦЫ)</span>
+        </div>
+        <div class="tg-inset-group" id="blacklistContainer">
+          <div class="tg-cell">
+            <div class="cell-content">
+              <span class="cell-sub">В чёрном списке пока никого нет</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="padding: 20px 16px 10px; display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" class="ios-btn primary" id="btnSaveSettings" style="width: 100%; height: 44px; font-size: 0.92rem;">
+            <span>Сохранить все настройки</span>
+          </button>
+          <button type="button" class="ios-btn secondary" id="btnTestTelegram" style="width: 100%; height: 42px;">
+            <span>Тестовое уведомление в Telegram</span>
+          </button>
+        </div>
+
+        <p class="tg-section-footer">Все изменения сохраняются в settings.json и вступают в силу немедленно.</p>
+      </section>
+
+    </main>
+
+    <!-- Telegram Bottom Tab Navigation Bar with Animated Indicator -->
+    <nav class="tg-tabbar" id="tgTabbar">
+      <div class="tg-tabbar-indicator" id="tabbarIndicator"></div>
+      
+      <!-- Tab 1: All Ads (Объявления) -->
+      <button class="tg-tab-item active" data-tab="ads" type="button">
+        <div class="tab-icon-wrap">
+          <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+            <line x1="12" y1="18" x2="12.01" y2="18"/>
+          </svg>
+          <span class="tab-badge" id="adsCountBadge" style="display: none;">0</span>
+        </div>
+        <span class="tab-label">Объявления</span>
+      </button>
+
+      <!-- Tab 2: Deals (Сделки) -->
+      <button class="tg-tab-item" data-tab="deals" type="button">
+        <div class="tab-icon-wrap">
+          <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <span class="tab-badge" id="dealsCountBadge" style="display: none;">0</span>
+        </div>
+        <span class="tab-label">Сделки</span>
+      </button>
+
+      <!-- Tab 3: Profit Calculator (Маржа) -->
+      <button class="tg-tab-item" data-tab="calculator" type="button">
+        <div class="tab-icon-wrap">
+          <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="2" width="16" height="20" rx="2"/>
+            <line x1="8" y1="6" x2="16" y2="6"/>
+            <line x1="16" y1="14" x2="16" y2="18"/>
+            <path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/>
+          </svg>
+        </div>
+        <span class="tab-label">Маржа</span>
+      </button>
+
+      <!-- Tab 4: Tasks -->
+      <button class="tg-tab-item" data-tab="tasks" type="button">
+        <div class="tab-icon-wrap">
+          <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="6"/>
+            <circle cx="12" cy="12" r="2"/>
+          </svg>
+          <span class="tab-badge" id="tasksCountBadge" style="display: none;">0</span>
+        </div>
+        <span class="tab-label">Задачи</span>
+      </button>
+
+      <!-- Tab 5: Settings -->
+      <button class="tg-tab-item" data-tab="settings" type="button">
+        <div class="tab-icon-wrap">
+          <svg class="tab-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </div>
+        <span class="tab-label">Настройки</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- ============================================== -->
+  <!-- iOS BOTTOM SHEET MODAL (Add Task)              -->
+  <!-- ============================================== -->
+  <div class="ios-sheet-overlay" id="taskModal">
+    <div class="ios-sheet-card">
+      <div class="sheet-grabber"></div>
+
+      <div class="sheet-header">
+        <h3 id="modalTitle">Новый поиск</h3>
+        <button class="sheet-close-btn" id="btnCloseTaskModal" type="button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Quick Preset Pills in iOS Style -->
+      <div class="preset-scroll-bar">
+        <button type="button" class="ios-chip preset-pill" data-model="iPhone 13" data-min="28000" data-max="45000">iPhone 13</button>
+        <button type="button" class="ios-chip preset-pill" data-model="iPhone 13 Pro" data-min="38000" data-max="60000">13 Pro</button>
+        <button type="button" class="ios-chip preset-pill" data-model="iPhone 14" data-min="38000" data-max="58000">iPhone 14</button>
+        <button type="button" class="ios-chip preset-pill" data-model="iPhone 14 Pro" data-min="52000" data-max="75000">14 Pro</button>
+        <button type="button" class="ios-chip preset-pill" data-model="iPhone 15" data-min="48000" data-max="70000">iPhone 15</button>
+        <button type="button" class="ios-chip preset-pill" data-model="iPhone 15 Pro" data-min="65000" data-max="95000">15 Pro</button>
+      </div>
+
+      <form id="taskForm">
+        <input type="hidden" id="taskId">
+
+        <div class="tg-inset-group" style="margin-bottom: 18px;">
+          <div class="tg-cell">
+            <span class="cell-label-fixed">Модель</span>
+            <input type="text" id="taskModel" class="cell-inline-input" placeholder="iPhone 13 Pro" required>
+          </div>
+          <div class="tg-cell-divider"></div>
+          <div class="tg-cell">
+            <span class="cell-label-fixed">Город</span>
+            <input type="text" id="taskCity" class="cell-inline-input" placeholder="Кемерово, Новосибирск" required>
+          </div>
+          <div class="tg-cell-divider"></div>
+          <div class="tg-cell">
+            <span class="cell-label-fixed">Мин. ₽</span>
+            <input type="number" id="taskMinPrice" class="cell-inline-input" placeholder="25 000" required>
+          </div>
+          <div class="tg-cell-divider"></div>
+          <div class="tg-cell">
+            <span class="cell-label-fixed">Макс. ₽</span>
+            <input type="number" id="taskMaxPrice" class="cell-inline-input" placeholder="60 000" required>
+          </div>
+          <div class="tg-cell-divider"></div>
+          <div class="tg-cell">
+            <span class="cell-label-fixed">Topic ID</span>
+            <input type="number" id="taskThreadId" class="cell-inline-input" placeholder="Опционально (для топиков)">
+          </div>
+        </div>
+
+        <button type="submit" class="ios-btn primary" style="width: 100%; height: 46px; font-size: 0.95rem; border-radius: 12px;">
+          <span>Сохранить задачу</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- iOS Dynamic Toast Notification -->
+  <div class="ios-dynamic-toast" id="iosToast">
+    <div class="toast-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <span id="toastMsg">Успешно</span>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,746 @@
+/* ==========================================================================
+   Liquid Glass Theme for Telegram Mini Apps (iOS 27 style)
+   Family Menu Planner & Supermarket Price Comparator (Пятерочка, Магнит, Лента)
+   Based on liquid-glass-kit by Volodymyr (@vovnx)
+   ========================================================================== */
+
+:root {
+  --u: min(.46px, calc((100vw - 24px) / 1058));
+  --blue: #3a8bf7;
+  --green: #34c759;
+  --orange: #ff9500;
+  --red: #ff3b30;
+  --top: calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px)) + var(--tg-content-safe-area-inset-top, 0px));
+  --pl: max(16px, env(safe-area-inset-left, 0px));
+  --pr: max(16px, env(safe-area-inset-right, 0px));
+  --hh: 43px;
+  --gap-top: 6px;
+  --bot: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px));
+  color-scheme: dark;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html {
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+  overscroll-behavior: none;
+  color: #fff;
+  font-family: -apple-system, "SF Pro Text", Inter, system-ui, "Segoe UI", sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Background Ambient Glow */
+.bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  z-index: 0;
+}
+
+.bg i {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.7;
+}
+
+.bg i:nth-child(1) { width: 65vw; height: 65vw; left: -15vw; top: 4vh; background: #3a8bf7; }
+.bg i:nth-child(2) { width: 60vw; height: 60vw; right: -18vw; top: 32vh; background: #ff5a3c; }
+.bg i:nth-child(3) { width: 55vw; height: 55vw; left: 15vw; bottom: -12vh; background: #34c759; }
+
+/* Views container */
+.view {
+  position: fixed;
+  inset: 0;
+  padding: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .25s, visibility .25s;
+  z-index: 2;
+}
+
+.view.on {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sscroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: calc(var(--top) + 14px) var(--pr) calc(190*var(--u) + var(--bot) + 50px) var(--pl);
+}
+
+.sscroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Apple Header */
+.stop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.stop h2 {
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 700;
+  margin-top: 24px;
+  letter-spacing: -.02em;
+}
+
+.stop .sub {
+  font-size: 14px;
+  color: #8e8e93;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.sav {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #34c759, #3a8bf7);
+  box-shadow: 0 0 0 2px rgba(255,255,255,.35);
+  margin-top: 24px;
+}
+
+/* Liquid Glass Cards */
+.scard {
+  background: #1c1c1e;
+  border-radius: 28px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  transition: opacity .25s, transform .3s;
+}
+
+.schd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.schd span {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  color: #9a9aa0;
+  text-transform: uppercase;
+}
+
+.schd-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(58,139,247,.18);
+  color: var(--blue);
+}
+
+.schd-badge.green {
+  background: rgba(52,199,89,.18);
+  color: var(--green);
+}
+
+.scb {
+  padding: 18px;
+}
+
+/* Liquid Glass Base Styles */
+.matte {
+  border-radius: 999px;
+  background: rgba(60,60,60,.62);
+  -webkit-backdrop-filter: blur(8px) saturate(1.8);
+  backdrop-filter: blur(8px) saturate(1.8);
+  border: 0;
+  box-shadow: inset 0 0 8px rgba(255,255,255,.05), 0 8px 24px rgba(0,0,0,.3);
+}
+
+.matte::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  filter: blur(.4px);
+  background: linear-gradient(90deg, rgba(255,255,255,.03) 0, rgba(255,255,255,.12) 16%, rgba(255,255,255,.2) 36%, rgba(255,255,255,.22) 50%, rgba(255,255,255,.2) 64%, rgba(255,255,255,.12) 84%, rgba(255,255,255,.03) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+.glass {
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.25);
+  box-shadow: inset 0 0 16px -4px rgba(255,255,255,.45), 0 10px 26px rgba(0,0,0,.4);
+}
+
+.solid {
+  background: rgba(255,255,255,.16);
+  border-radius: 999px;
+  opacity: clamp(0, calc(1 - var(--p)*4), 1);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.thumb {
+  border: 1px solid rgba(255,255,255,.1);
+  box-shadow: 0 calc(6px + var(--p)*10px) calc(18px + var(--p)*20px) rgba(0,0,0,calc(.3 + var(--p)*.25));
+  opacity: clamp(0, calc(var(--p)*4), 1);
+  overflow: hidden;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.lens {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  background: #2b2b2b;
+  box-shadow: inset 0 0 calc(22*var(--u)) calc(3*var(--u)) rgba(0,0,0,.6);
+}
+
+.lens .tabs {
+  inset: auto;
+  left: calc(-22.5*var(--u) - var(--x)*273*var(--u) - var(--tx)*var(--u) - 1px);
+  top: calc(-12*var(--u) - 1px);
+  width: calc(843*var(--u));
+  height: calc(190*var(--u));
+}
+
+.lens .gap, .lens .tab.on .gap { stroke: #2b2b2b; }
+
+/* The Liquid Glass Tab Bar */
+.dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--bot) + 12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: calc(24*var(--u));
+  z-index: 20;
+}
+
+.bar {
+  position: relative;
+  width: calc(843*var(--u));
+  height: calc(190*var(--u));
+  touch-action: none;
+  cursor: grab;
+}
+
+.bar.down { cursor: grabbing; }
+
+.base {
+  position: absolute;
+  inset: 0;
+}
+
+.fil {
+  position: absolute;
+  left: calc(-60*var(--u));
+  top: calc(-40*var(--u));
+  width: calc(963*var(--u));
+  height: calc(270*var(--u));
+  pointer-events: none;
+  background: rgba(60,60,60,.62);
+  -webkit-backdrop-filter: blur(8px) saturate(1.8);
+  backdrop-filter: blur(8px) saturate(1.8);
+  clip-path: path('M0 0 Z');
+}
+
+.thumb, .solid {
+  position: absolute;
+  top: calc(12*var(--u));
+  left: calc(22.5*var(--u) + var(--x)*273*var(--u));
+  width: calc(252*var(--u));
+  height: calc(165*var(--u));
+  translate: calc(var(--tx)*var(--u)) 0;
+  scale: var(--sx) var(--sy);
+  pointer-events: none;
+}
+
+.tabs {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(3, calc(273*var(--u)));
+  padding: 0 calc(12*var(--u));
+  pointer-events: none;
+}
+
+.tab {
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(10*var(--u));
+  font-size: calc(30*var(--u));
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+  transition: color .25s;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.bar > .tabs > .tab.on > * {
+  opacity: clamp(0, calc(1 - var(--p)*4), 1);
+}
+
+.tab.on {
+  color: var(--blue);
+}
+
+.ico {
+  height: calc(70*var(--u));
+  display: grid;
+  place-items: center;
+}
+
+.ico svg {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+
+/* Liquid Glass Circle Action Button in Dock */
+.circle {
+  position: relative;
+  width: calc(191*var(--u));
+  height: calc(191*var(--u));
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  color: #fff;
+  touch-action: none;
+  translate: var(--ox, 0px) var(--oy, 0px);
+  scale: var(--cx, 1) var(--cy, 1);
+}
+
+.circle > .ics {
+  opacity: calc(1 - var(--sp, 0));
+}
+
+.ics {
+  display: grid;
+  place-items: center;
+}
+
+.ics svg {
+  grid-area: 1/1;
+  height: calc(70*var(--u));
+  width: auto;
+}
+
+.sthumb {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: var(--sp, 0);
+  pointer-events: none;
+}
+
+/* Glass Buttons & Pills */
+.gb {
+  position: relative;
+  translate: var(--ox, 0px) var(--oy, 0px);
+  scale: var(--cx, 1) var(--cy, 1);
+  touch-action: none;
+  cursor: grab;
+}
+
+.gb > .gc {
+  opacity: calc(1 - var(--sp, 0));
+}
+
+.pill {
+  height: 44px;
+  padding: 0 18px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.glass.soft {
+  border: 1px solid rgba(255,255,255,.02);
+  box-shadow: 0 6px 16px rgba(0,0,0,.4);
+}
+
+.glass.soft::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 7px 8px -6px rgba(255,255,255,.007), inset 0 -7px 8px -6px rgba(255,255,255,.005);
+}
+
+.soft .lens {
+  background: transparent;
+}
+
+/* Toast Notification (Eggpop) */
+.eggpop {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  left: 50%;
+  top: 50px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  background: rgba(45, 45, 45, 0.85);
+  -webkit-backdrop-filter: blur(14px) saturate(1.8);
+  backdrop-filter: blur(14px) saturate(1.8);
+  box-shadow: inset 0 0 10px -2px rgba(255,255,255,.4), 0 10px 30px rgba(0,0,0,.5);
+  transform: translate(-50%, -70%) scale(.4);
+  opacity: 0;
+}
+
+.eggpop.show {
+  animation: eggpop 2.2s cubic-bezier(.2,1.2,.3,1) forwards;
+}
+
+@keyframes eggpop {
+  0% { opacity: 0; transform: translate(-50%, -70%) scale(.4); }
+  18% { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
+  30% { transform: translate(-50%, 0) scale(1); }
+  75% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -40px) scale(.95); }
+}
+
+/* Day selector horizontal chips */
+.day-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 14px;
+  scrollbar-width: none;
+}
+
+.day-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.dchip {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all .2s ease;
+}
+
+.dchip.active {
+  background: var(--blue);
+  box-shadow: 0 4px 16px rgba(58, 139, 247, 0.45);
+  border-color: var(--blue);
+}
+
+/* Meal row items */
+.meal-item {
+  padding: 14px 0;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+}
+
+.meal-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.meal-item:first-child {
+  padding-top: 0;
+}
+
+.meal-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.meal-type-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #8e8e93;
+}
+
+.meal-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.meal-meta {
+  font-size: 13px;
+  color: #a8a8ae;
+  margin-bottom: 8px;
+}
+
+.meal-ings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ing-tag {
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 3px 8px;
+  color: #d1d1d6;
+}
+
+/* Supermarket Battle Grid */
+.battle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.store-box {
+  background: #1c1c1e;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 8px;
+  text-align: center;
+  position: relative;
+  transition: all .2s;
+}
+
+.store-box.winner {
+  border-color: var(--green);
+  background: linear-gradient(180deg, rgba(52, 199, 89, 0.15) 0%, #1c1c1e 100%);
+  box-shadow: 0 4px 18px rgba(52, 199, 89, 0.25);
+}
+
+.store-winner-badge {
+  position: absolute;
+  top: -8px;
+  right: -4px;
+  background: var(--green);
+  color: #000;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 6px;
+  padding: 2px 5px;
+}
+
+.store-name {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.store-price {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.store-diff {
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.store-diff.more {
+  color: #8e8e93;
+}
+
+/* Product list rows in Prices tab */
+.p-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+}
+
+.p-row:last-child {
+  border-bottom: none;
+}
+
+.p-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.p-sub {
+  font-size: 12px;
+  color: #8e8e93;
+  margin-top: 2px;
+}
+
+.p-prices {
+  display: flex;
+  gap: 6px;
+}
+
+.p-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 7px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #8e8e93;
+}
+
+.p-badge.best {
+  background: rgba(52, 199, 89, 0.2);
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* Liquid Glass Interactive Tags (.tg) */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c, #fff);
+  background: color-mix(in srgb, var(--c, #fff) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c, #fff) 35%, transparent);
+  cursor: pointer;
+  transition: transform .15s, background .15s;
+}
+
+.tg:active {
+  transform: scale(.94);
+}
+
+.tg.selected {
+  background: color-mix(in srgb, var(--c, #fff) 35%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c, #fff) 40%, transparent);
+}
+
+.tg.stop-tag {
+  --c: #ff3b30;
+}
+
+.tg.fav-tag {
+  --c: #34c759;
+}
+
+.tg.allg-tag {
+  --c: #ff9500;
+}
+
+/* Stepper Control */
+.stepper-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.step-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.step-btn:active {
+  transform: scale(.9);
+}
+
+.step-val {
+  font-size: 20px;
+  font-weight: 800;
+  min-width: 30px;
+  text-align: center;
+}
+
+/* Action button inside cards */
+.action-glass-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 999px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 20px rgba(58, 139, 247, 0.4);
+  transition: transform .15s, opacity .15s;
+  margin-top: 10px;
+}
+
+.action-glass-btn:active {
+  transform: scale(.98);
+  opacity: .9;
+}
